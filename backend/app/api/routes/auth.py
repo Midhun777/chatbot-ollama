@@ -18,6 +18,18 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         print(f"DEBUG: Email {user.email} already registered")
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Check for duplicate id_number based on role
+    if user.role == models.UserRole.STUDENT:
+        existing_student = db.query(models.Student).filter(models.Student.enrollment_no == user.id_number).first()
+        if existing_student:
+            print(f"DEBUG: Enrollment No {user.id_number} already registered")
+            raise HTTPException(status_code=400, detail="Enrollment No already registered")
+    elif user.role == models.UserRole.FACULTY:
+        existing_faculty = db.query(models.Faculty).filter(models.Faculty.employee_id == user.id_number).first()
+        if existing_faculty:
+            print(f"DEBUG: Employee ID {user.id_number} already registered")
+            raise HTTPException(status_code=400, detail="Employee ID already registered")
+    
     try:
         hashed_password = get_password_hash(user.password)
         new_user = models.User(

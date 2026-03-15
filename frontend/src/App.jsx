@@ -11,6 +11,7 @@ import Register from './pages/auth/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
+import GuestDashboard from './pages/guest/GuestDashboard';
 
 // Placeholder Dashboards (To be replaced)
 const Courses = () => <div className="p-8"><h1 className="text-2xl font-bold text-blue-600">Public Courses</h1></div>;
@@ -29,6 +30,7 @@ function App() {
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
                             <Route path="/courses" element={<Courses />} />
+                            <Route path="/guest/dashboard" element={<GuestDashboard />} />
 
                             {/* Student Protected Routes */}
                             <Route element={<ProtectedRoute allowedRoles={['student']} />}>

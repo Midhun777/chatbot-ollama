@@ -127,13 +127,28 @@ const Login = () => {
                             </button>
                         </div>
 
-                        <div className="text-center mt-6">
-                            <span className="text-sm font-bold text-slate-400">
-                                Need an account?{' '}
-                                <Link to="/register" className="text-indigo-600 hover:text-indigo-800 transition-colors">
-                                    Get started
-                                </Link>
-                            </span>
+                        <div className="text-center mt-6 space-y-4">
+                            <div>
+                                <span className="text-sm font-bold text-slate-400">
+                                    Need an account?{' '}
+                                    <Link to="/register" className="text-indigo-600 hover:text-indigo-800 transition-colors">
+                                        Get started
+                                    </Link>
+                                </span>
+                            </div>
+                            
+                            <div className="relative flex items-center py-2">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-xs font-black text-slate-300 uppercase tracking-widest">or</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                            </div>
+                            
+                            <Link 
+                                to="/guest/dashboard"
+                                className="block w-full h-12 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center"
+                            >
+                                Continue as Guest
+                            </Link>
                         </div>
                     </form>
                 </div>
