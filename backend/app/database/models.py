@@ -32,6 +32,8 @@ class Student(Base):
     department = Column(String)
     current_semester = Column(Integer)
     phone = Column(String)
+    cgpa = Column(Float, default=0.0)
+    profile_bio = Column(String, default="")
 
     user = relationship("User", back_populates="student_profile")
     attendances = relationship("Attendance", back_populates="student")
@@ -101,3 +103,44 @@ class ChatMessage(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User")
+
+class DocumentForm(Base):
+    __tablename__ = "document_forms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    file_path = Column(String)
+    uploaded_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    uploader = relationship("User")
+
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    body = Column(String)
+    category = Column(String, default="General")  # General, Exam, Event, Holiday
+    is_pinned = Column(Boolean, default=False)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    author = relationship("User")
+
+
+class Timetable(Base):
+    __tablename__ = "timetable"
+
+    id = Column(Integer, primary_key=True, index=True)
+    department = Column(String, index=True)
+    semester = Column(Integer, index=True)
+    day_of_week = Column(String)   # Monday, Tuesday, ...
+    time_slot = Column(String)     # e.g. "09:00 - 10:00"
+    subject_name = Column(String)
+    subject_code = Column(String)
+    room = Column(String)
+    faculty_name = Column(String)
+

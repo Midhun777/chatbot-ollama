@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
+import os
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
@@ -13,9 +15,60 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
 
+class FormAttachment(BaseModel):
+    form_id: int
+    form_title: str
+    description: Optional[str] = None
+    download_url: str
+
 class ChatResponse(BaseModel):
     answer: str
-    source: str # e.g., 'DATABASE' or 'RAG-LLM'
+    source: str  # e.g., 'DATABASE', 'RAG-LLM', or 'FORMS'
+    form: Optional[FormAttachment] = None
+
+@router.get("/forms/download/{form_id}")
+def download_form(
+    form_id: int,
+    db: Session = Depends(get_db)
+):
+    form = db.query(models.DocumentForm).filter(models.DocumentForm.id == form_id).first()
+    if not form or not os.path.exists(form.file_path):
+        raise HTTPException(status_code=404, detail="Form not found")
+    
+    return FileResponse(
+        path=form.file_path, 
+        filename=os.path.basename(form.file_path),
+        media_type="application/pdf"
+    )
+
+# Keywords that map to specific form types for better matching
+FORM_KEYWORDS = {
+    "admission": ["admission", "admit", "enroll", "enrollment", "join", "entry"],
+    "scholarship": ["scholarship", "financial aid", "merit", "stipend", "funding"],
+    "leave": ["leave", "absence", "absent", "off", "vacation", "sick leave"],
+    "bonafide": ["bonafide", "bona fide", "certificate", "verification", "proof"],
+    "hostel": ["hostel", "accommodation", "dormitory", "dorm", "room", "stay", "housing"],
+}
+
+def find_matching_form(query: str, forms):
+    """Find the best matching form for a user query."""
+    lower_query = query.lower()
+    
+    # First pass: Check if query contains specific form-type keywords
+    for form_type, keywords in FORM_KEYWORDS.items():
+        if any(kw in lower_query for kw in keywords):
+            # Find the form whose title matches this type
+            for f in forms:
+                if form_type in f.title.lower():
+                    return f
+    
+    # Second pass: Match any word from form titles
+    for f in forms:
+        title_words = [w.lower() for w in f.title.split() if len(w) > 3]
+        if any(word in lower_query for word in title_words):
+            return f
+    
+    return None
 
 @router.post("/query", response_model=ChatResponse)
 def handle_chat_query(
@@ -30,8 +83,42 @@ def handle_chat_query(
     
     chat_resp = None
     
+    # Check if the query is asking for a form or document
+    lower_query = user_query.lower()
+    form_trigger_words = ["form", "application", "apply", "download", "send me", "give me", "need a", "get the"]
+    if any(trigger in lower_query for trigger in form_trigger_words):
+        forms = db.query(models.DocumentForm).all()
+        matched_form = find_matching_form(user_query, forms)
+        
+        if matched_form:
+            download_url = f"http://localhost:8000/api/chat/forms/download/{matched_form.id}"
+            ans = (
+                f"Here is the **{matched_form.title}** you requested! "
+                f"Click the download button below to get your form.\n\n"
+                f"_{matched_form.description}_"
+            )
+            form_attachment = FormAttachment(
+                form_id=matched_form.id,
+                form_title=matched_form.title,
+                description=matched_form.description,
+                download_url=download_url,
+            )
+            chat_resp = ChatResponse(answer=ans, source="FORMS", form=form_attachment)
+        else:
+            # No specific form matched — list all available forms
+            if forms:
+                form_list = "\n".join(
+                    [f"• **{f.title}** — {f.description or 'No description'}" for f in forms]
+                )
+                ans = (
+                    f"I couldn't find the exact form you're looking for, but here are all available forms:\n\n"
+                    f"{form_list}\n\n"
+                    f"Please specify which form you need (e.g., \"send me admission form\")."
+                )
+                chat_resp = ChatResponse(answer=ans, source="FORMS")
+
     # 2. Path A: Personal DB Inquiry
-    if query_intent == "PERSONAL":
+    if not chat_resp and query_intent == "PERSONAL":
         student = db.query(models.Student).filter(models.Student.user_id == current_user.id).first()
         if not student:
             chat_resp = ChatResponse(
@@ -55,7 +142,7 @@ def handle_chat_query(
                 chat_resp = ChatResponse(answer=ans, source="DATABASE")
 
     # 3. Path B: RAG Query for Knowledge/Syllabus
-    else:
+    if not chat_resp:
         try:
             # Let Langchain process this through Chroma & local Ollama model
             ollama_answer = rag_chain.ask_question(user_query)

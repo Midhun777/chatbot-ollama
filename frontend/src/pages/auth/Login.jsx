@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { GraduationCap, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
@@ -13,11 +13,12 @@ const Login = () => {
     const { login, user } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Redirect if already logged in
-    if (user) {
-        navigate(`/${user.role}/dashboard`);
-        return null;
-    }
+    // Redirect if already logged in — must be in useEffect to avoid render-phase crash
+    useEffect(() => {
+        if (user) navigate(`/${user.role}/dashboard`);
+    }, [user, navigate]);
+
+    if (user) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,9 +28,8 @@ const Login = () => {
         const success = await login(email, password);
 
         if (success) {
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
+            const payload = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
+            navigate(`/${payload.role}/dashboard`);
         } else {
             setError('Invalid credentials. Please verify your email and password.');
             setIsLoading(false);
@@ -59,7 +59,7 @@ const Login = () => {
                         Welcome <span className="gradient-text">Back</span>
                     </h2>
                     <p className="mt-3 text-slate-500 font-bold">
-                        Securely sign in to your Smart College Portal
+                        Securely sign in to your EduSphere Portal
                     </p>
                 </div>
 
@@ -159,7 +159,7 @@ const Login = () => {
                     transition={{ delay: 0.5 }}
                     className="text-center mt-8 text-xs font-black text-slate-300 uppercase tracking-[0.2em]"
                 >
-                    &copy; 2026 Smart College Inc.
+                    &copy; 2026 EduSphere Inc.
                 </motion.p>
             </motion.div>
         </div>

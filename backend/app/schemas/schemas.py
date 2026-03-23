@@ -7,11 +7,8 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    role: str = "student"
     first_name: str
     last_name: str
-    department: str
-    id_number: str # Enrollment No or Employee ID
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -78,3 +75,89 @@ class ChatMessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class DocumentFormCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+
+class DocumentFormResponse(DocumentFormCreate):
+    id: int
+    file_path: str
+    uploaded_by: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# ─── Announcements ────────────────────────────────────────────────
+class AnnouncementCreate(BaseModel):
+    title: str
+    body: str
+    category: Optional[str] = "General"
+    is_pinned: Optional[bool] = False
+
+class AnnouncementResponse(AnnouncementCreate):
+    id: int
+    created_by: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# ─── Timetable ───────────────────────────────────────────────────
+class TimetableEntry(BaseModel):
+    id: int
+    department: str
+    semester: int
+    day_of_week: str
+    time_slot: str
+    subject_name: str
+    subject_code: str
+    room: str
+    faculty_name: str
+
+    class Config:
+        from_attributes = True
+
+# ─── Student Profile Update ──────────────────────────────────────
+class StudentProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    department: Optional[str] = None
+    current_semester: Optional[int] = None
+    cgpa: Optional[float] = None
+    profile_bio: Optional[str] = None
+
+class StudentProfileResponse(BaseModel):
+    id: int
+    enrollment_no: str
+    first_name: str
+    last_name: str
+    department: str
+    current_semester: int
+    phone: Optional[str] = ""
+    cgpa: Optional[float] = 0.0
+    profile_bio: Optional[str] = ""
+
+    class Config:
+        from_attributes = True
+
+
+# ─── AI Roadmap ───────────────────────────────────────────────────
+class RoadmapRequest(BaseModel):
+    topic: str
+    skill_level: Optional[str] = "Beginner"
+    deadline_weeks: Optional[int] = 4
+    daily_hours: Optional[float] = 1.5
+
+# ─── Timetable Create ────────────────────────────────────────────
+class TimetableCreate(BaseModel):
+    department: str
+    semester: int
+    day_of_week: str
+    time_slot: str
+    subject_name: str
+    subject_code: str
+    room: str
+    faculty_name: str

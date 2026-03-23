@@ -4,7 +4,7 @@ echo Starting AI-Powered Smart College Portal
 echo ==========================================
 
 echo Starting Python FastAPI Backend...
-start cmd /k "cd backend && call venv\Scripts\activate && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+start cmd /k "cd backend && .\venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 echo Starting Vite React Frontend...
 start cmd /k "cd frontend && npm run dev"

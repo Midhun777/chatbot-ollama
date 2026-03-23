@@ -22,7 +22,7 @@ const GuestDashboard = () => {
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Guest View</span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                                Welcome to <span className="gradient-text">Smart College</span>
+                                Welcome to <span className="gradient-text">EduSphere</span>
                             </h1>
                             <p className="mt-2 text-slate-500 font-medium">
                                 You are viewing the portal as a guest. Explore our course catalog to get started.
@@ -59,7 +59,7 @@ const GuestDashboard = () => {
                         </div>
                         <h2 className="text-xl font-black text-slate-900 mb-3">Course Catalog</h2>
                         <p className="text-slate-500 leading-relaxed font-medium flex-grow">
-                            Browse our wide selection of undergraduate and graduate programs. See what makes Smart College the right choice for your future.
+                            Browse our wide selection of undergraduate and graduate programs. See what makes EduSphere the right choice for your future.
                         </p>
                         
                         <Link to="/courses" className="mt-6 flex items-center text-indigo-600 font-bold group-hover:text-indigo-700 cursor-pointer">

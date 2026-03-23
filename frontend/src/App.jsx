@@ -13,7 +13,14 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
 import GuestDashboard from './pages/guest/GuestDashboard';
 
-// Placeholder Dashboards (To be replaced)
+// New feature pages
+import Timetable from './pages/student/Timetable';
+import ProfileEdit from './pages/student/ProfileEdit';
+import Roadmap from './pages/student/Roadmap';
+import Announcements from './pages/student/Announcements';
+import Performance from './pages/student/Performance';
+
+// Placeholder page
 const Courses = () => <div className="p-8"><h1 className="text-2xl font-bold text-blue-600">Public Courses</h1></div>;
 
 function App() {
@@ -35,11 +42,17 @@ function App() {
                             {/* Student Protected Routes */}
                             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
                                 <Route path="/student/dashboard" element={<StudentDashboard />} />
+                                <Route path="/student/timetable" element={<Timetable />} />
+                                <Route path="/student/profile" element={<ProfileEdit />} />
+                                <Route path="/student/roadmap" element={<Roadmap />} />
+                                <Route path="/student/announcements" element={<Announcements />} />
+                                <Route path="/student/performance" element={<Performance />} />
                             </Route>
 
                             {/* Admin Protected Routes */}
                             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                                <Route path="/admin/announcements" element={<Announcements isAdmin={true} />} />
                             </Route>
 
                             {/* Faculty Protected Routes */}

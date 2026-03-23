@@ -27,7 +27,7 @@ const Navbar = () => {
                                 <GraduationCap className="h-7 w-7 text-white" />
                             </div>
                             <span className="font-black text-2xl tracking-tighter text-slate-900">
-                                Smart<span className="gradient-text">College</span>
+                                Edu<span className="gradient-text">Sphere</span>
                             </span>
                         </Link>
                     </motion.div>

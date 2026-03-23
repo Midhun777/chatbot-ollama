@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { GraduationCap, Lock, Mail, User, BookOpen, Fingerprint, AlertCircle, CheckCircle } from 'lucide-react';
@@ -7,11 +7,8 @@ const Register = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        role: 'student',
         first_name: '',
-        last_name: '',
-        department: '',
-        id_number: ''
+        last_name: ''
     });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +17,12 @@ const Register = () => {
     const { register, user } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Redirect if already logged in
-    if (user) {
-        navigate(`/${user.role}/dashboard`);
-        return null;
-    }
+    // Redirect if already logged in — inside useEffect to avoid render-phase navigation crash
+    useEffect(() => {
+        if (user) navigate(`/${user.role}/dashboard`);
+    }, [user, navigate]);
+
+    if (user) return null;
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -39,9 +37,11 @@ const Register = () => {
 
         if (result.success) {
             setSuccess(true);
+            // Use navigate instead of reload to avoid blank page
+            const payload = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
             setTimeout(() => {
-                window.location.reload(); // Refresh to sync authentication state
-            }, 1500);
+                navigate(`/${payload.role}/dashboard`);
+            }, 800);
         } else {
             setError(result.error || 'Registration failed. Email might already be in use or data is invalid.');
             setIsLoading(false);
@@ -64,7 +64,7 @@ const Register = () => {
                         Create Account
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        Join the Smart College Portal
+                        Join the EduSphere Portal
                     </p>
                 </div>
             </div>
@@ -164,77 +164,7 @@ const Register = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Department</label>
-                                    <div className="mt-1 relative rounded-md shadow-sm">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <BookOpen className="h-5 w-5 text-gray-400" />
-                                        </div>
-                                        <select
-                                            name="department"
-                                            required
-                                            value={formData.department}
-                                            onChange={handleChange}
-                                            className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg p-2.5 border"
-                                        >
-                                            <option value="">Select Department</option>
-                                            <option value="Computer Science">Computer Science</option>
-                                            <option value="Electrical Engineering">Electrical Engineering</option>
-                                            <option value="Mechanical Engineering">Mechanical Engineering</option>
-                                            <option value="Information Technology">Information Technology</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        {formData.role === 'student' ? 'Enrollment No' : 'Employee ID'}
-                                    </label>
-                                    <div className="mt-1 relative rounded-md shadow-sm">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Fingerprint className="h-5 w-5 text-gray-400" />
-                                        </div>
-                                        <input
-                                            name="id_number"
-                                            type="text"
-                                            required
-                                            value={formData.id_number}
-                                            onChange={handleChange}
-                                            className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg p-2.5 border"
-                                            placeholder={formData.role === 'student' ? 'STU-12345' : 'FAC-12345'}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Register as</label>
-                                <div className="mt-3 flex gap-4">
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="role"
-                                            value="student"
-                                            checked={formData.role === 'student'}
-                                            onChange={handleChange}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">Student</span>
-                                    </label>
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="role"
-                                            value="faculty"
-                                            checked={formData.role === 'faculty'}
-                                            onChange={handleChange}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">Faculty</span>
-                                    </label>
-                                </div>
-                            </div>
 
                             <div>
                                 <button

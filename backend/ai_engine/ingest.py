@@ -5,9 +5,9 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
 # Configuration paths
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
-UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
-CHROMA_DB_DIR = os.path.join(DATA_DIR, "chromadb")
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "data")
+KNOWLEDGE_DIR = os.path.join(DATA_DIR, "knowledge")
+CHROMA_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "chromadb")
 
 embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
@@ -43,20 +43,20 @@ def ingest_pdf(file_path: str):
     
     return len(chunks)
 
-def ingest_all_uploads():
-    """Batch processes all PDFs in the data/uploads folder."""
-    if not os.path.exists(UPLOADS_DIR):
-        print(f"Uploads directory {UPLOADS_DIR} missing.")
+def ingest_all_knowledge():
+    """Batch processes all PDFs in the data/knowledge folder."""
+    if not os.path.exists(KNOWLEDGE_DIR):
+        print(f"Knowledge directory {KNOWLEDGE_DIR} missing.")
         return 0
 
     total_chunks = 0
-    for file in os.listdir(UPLOADS_DIR):
+    for file in os.listdir(KNOWLEDGE_DIR):
         if file.endswith(".pdf"):
-            path = os.path.join(UPLOADS_DIR, file)
+            path = os.path.join(KNOWLEDGE_DIR, file)
             chunks = ingest_pdf(path)
             total_chunks += chunks
             
     return total_chunks
 
 if __name__ == "__main__":
-    ingest_all_uploads()
+    ingest_all_knowledge()

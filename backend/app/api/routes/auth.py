@@ -12,58 +12,38 @@ router = APIRouter()
 
 @router.post("/register", response_model=schemas.Token)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    print(f"DEBUG: Registration attempt for email: {user.email}, role: {user.role}")
+    print(f"DEBUG: Registration attempt for email: {user.email}")
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         print(f"DEBUG: Email {user.email} already registered")
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Check for duplicate id_number based on role
-    if user.role == models.UserRole.STUDENT:
-        existing_student = db.query(models.Student).filter(models.Student.enrollment_no == user.id_number).first()
-        if existing_student:
-            print(f"DEBUG: Enrollment No {user.id_number} already registered")
-            raise HTTPException(status_code=400, detail="Enrollment No already registered")
-    elif user.role == models.UserRole.FACULTY:
-        existing_faculty = db.query(models.Faculty).filter(models.Faculty.employee_id == user.id_number).first()
-        if existing_faculty:
-            print(f"DEBUG: Employee ID {user.id_number} already registered")
-            raise HTTPException(status_code=400, detail="Employee ID already registered")
+    # Removed ID and Role specific duplicate checks
     
     try:
         hashed_password = get_password_hash(user.password)
         new_user = models.User(
             email=user.email,
             password_hash=hashed_password,
-            role=user.role
+            role="student" # Defaulting all new registrations to student
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
         print(f"DEBUG: User {new_user.id} created")
 
-        # Create profile based on role
-        if user.role == models.UserRole.STUDENT:
-            student_profile = models.Student(
-                user_id=new_user.id,
-                enrollment_no=user.id_number,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                department=user.department,
-                current_semester=1,
-                phone=""
-            )
-            db.add(student_profile)
-        elif user.role == models.UserRole.FACULTY:
-            faculty_profile = models.Faculty(
-                user_id=new_user.id,
-                employee_id=user.id_number,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                department=user.department,
-                designation="Lecturer"
-            )
-            db.add(faculty_profile)
+        # Create student profile by default with placeholder values
+        import uuid # Needed for placeholder enrollment_no
+        student_profile = models.Student(
+            user_id=new_user.id,
+            enrollment_no=f"STU-{uuid.uuid4().hex[:6].upper()}", # Auto-generate placeholder 
+            first_name=user.first_name,
+            last_name=user.last_name,
+            department="Undeclared", # Default department
+            current_semester=1,
+            phone=""
+        )
+        db.add(student_profile)
         
         db.commit()
         print("DEBUG: Profile created successfully")
