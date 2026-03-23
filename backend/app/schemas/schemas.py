@@ -47,6 +47,12 @@ class CourseResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class AttendanceCreate(BaseModel):
+    student_id: int
+    course_id: int
+    date: str  # using string date usually easier from frontend
+    status: str
+
 class AttendanceResponse(BaseModel):
     id: int
     date: datetime
@@ -55,6 +61,13 @@ class AttendanceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MarkCreate(BaseModel):
+    student_id: int
+    course_id: int
+    exam_type: str
+    marks_obtained: float
+    total_marks: float
 
 class MarkResponse(BaseModel):
     id: int

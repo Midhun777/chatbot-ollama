@@ -4,7 +4,7 @@ from typing import List
 from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
-from app.api.dependencies import get_current_user, get_current_active_admin
+from app.api.dependencies import get_current_user, get_current_admin_or_faculty
 
 router = APIRouter()
 
@@ -25,9 +25,9 @@ def get_announcements(
 def create_announcement(
     announcement: schemas.AnnouncementCreate,
     db: Session = Depends(get_db),
-    admin_user: models.User = Depends(get_current_active_admin)
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
 ):
-    """Admin-only: Create a new announcement."""
+    """Admin or Faculty: Create a new announcement."""
     db_announcement = models.Announcement(
         title=announcement.title,
         body=announcement.body,
@@ -44,9 +44,9 @@ def create_announcement(
 def delete_announcement(
     announcement_id: int,
     db: Session = Depends(get_db),
-    admin_user: models.User = Depends(get_current_active_admin)
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
 ):
-    """Admin-only: Delete an announcement."""
+    """Admin or Faculty: Delete an announcement."""
     ann = db.query(models.Announcement).filter(models.Announcement.id == announcement_id).first()
     if not ann:
         raise HTTPException(status_code=404, detail="Announcement not found")

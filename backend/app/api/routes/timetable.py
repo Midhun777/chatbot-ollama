@@ -4,7 +4,7 @@ from typing import List
 from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
-from app.api.dependencies import get_current_student, get_current_active_admin
+from app.api.dependencies import get_current_student, get_current_active_admin, get_current_admin_or_faculty
 
 router = APIRouter()
 
@@ -35,6 +35,33 @@ def get_my_timetable(
         e.time_slot
     ))
     return entries
+
+@router.post("/", response_model=schemas.TimetableEntry)
+def create_timetable_entry(
+    entry: schemas.TimetableCreate,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
+):
+    """Admin or Faculty: Create a new timetable entry."""
+    db_entry = models.Timetable(**entry.dict())
+    db.add(db_entry)
+    db.commit()
+    db.refresh(db_entry)
+    return db_entry
+
+@router.delete("/{entry_id}")
+def delete_timetable_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
+):
+    """Admin or Faculty: Delete a timetable entry."""
+    db_entry = db.query(models.Timetable).filter(models.Timetable.id == entry_id).first()
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    db.delete(db_entry)
+    db.commit()
+    return {"message": "Deleted successfully"}
 
 @router.post("/seed")
 def seed_timetable(

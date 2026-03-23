@@ -39,3 +39,8 @@ def get_current_faculty(current_user: models.User = Depends(get_current_user)):
     if current_user.role != models.UserRole.FACULTY:
         raise HTTPException(status_code=403, detail="Not enough privileges")
     return current_user
+
+def get_current_admin_or_faculty(current_user: models.User = Depends(get_current_user)):
+    if current_user.role not in [models.UserRole.ADMIN, models.UserRole.FACULTY]:
+        raise HTTPException(status_code=403, detail="Not enough privileges, requires admin or faculty role")
+    return current_user
