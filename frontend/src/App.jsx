@@ -19,9 +19,7 @@ import GuestChat from './pages/public/GuestChat';
 import Timetable from './pages/student/Timetable';
 import ProfileEdit from './pages/student/ProfileEdit';
 import Announcements from './pages/student/Announcements';
-
-// Placeholder page
-const Courses = () => <div className="p-8"><h1 className="text-2xl font-bold text-blue-600">Public Courses</h1></div>;
+import Courses from './pages/public/Courses';
 
 function App() {
     return (
@@ -59,6 +57,7 @@ function App() {
                             <Route element={<ProtectedRoute allowedRoles={['faculty']} />}>
                                 <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
                                 <Route path="/faculty/messages" element={<Messages />} />
+                                <Route path="/faculty/profile" element={<ProfileEdit />} />
                             </Route>
 
                             {/* Fallback */}

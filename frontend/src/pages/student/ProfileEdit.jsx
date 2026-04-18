@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { User, Phone, BookOpen, Award, Save, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
+import { User, Phone, BookOpen, Save, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
 import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const ProfileEdit = () => {
+  const { user } = useContext(AuthContext);
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
     phone: '',
     department: '',
-    current_semester: '',
-    cgpa: '',
+    current_semester: '', // Student and Admin maybe
+    designation: '', // Faculty specific
     profile_bio: '',
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -19,12 +21,13 @@ const ProfileEdit = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (user) fetchProfile();
+  }, [user]);
 
   const fetchProfile = async () => {
+    if (!user) return;
     try {
-      const res = await api.get('/student/profile');
+      const res = await api.get(`/${user.role}/profile`);
       const p = res.data;
       setForm({
         first_name: p.first_name || '',
@@ -32,7 +35,7 @@ const ProfileEdit = () => {
         phone: p.phone || '',
         department: p.department || '',
         current_semester: p.current_semester || '',
-        cgpa: p.cgpa || '',
+        designation: p.designation || '',
         profile_bio: p.profile_bio || '',
       });
     } catch (err) {
@@ -48,15 +51,16 @@ const ProfileEdit = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setIsSaving(true);
     setError('');
     setSuccess(false);
     try {
-      await api.patch('/student/profile', {
-        ...form,
-        current_semester: parseInt(form.current_semester) || undefined,
-        cgpa: parseFloat(form.cgpa) || undefined,
-      });
+      const payload = { ...form };
+      if (user.role === 'student' && payload.current_semester) {
+          payload.current_semester = parseInt(payload.current_semester) || undefined;
+      }
+      await api.patch(`/${user.role}/profile`, payload);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -119,10 +123,14 @@ const ProfileEdit = () => {
           {/* Academic */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Field label="Department" name="department" value={form.department} onChange={handleChange} icon={<BookOpen className="h-4 w-4" />} placeholder="Computer Science" />
-            <Field label="Current Semester" name="current_semester" value={form.current_semester} onChange={handleChange} icon={<BookOpen className="h-4 w-4" />} placeholder="3" type="number" min="1" max="8" />
+            
+            {user?.role === 'student' && (
+              <Field label="Current Semester" name="current_semester" value={form.current_semester} onChange={handleChange} icon={<BookOpen className="h-4 w-4" />} placeholder="3" type="number" min="1" max="8" />
+            )}
+            {user?.role === 'faculty' && (
+              <Field label="Designation" name="designation" value={form.designation} onChange={handleChange} icon={<User className="h-4 w-4" />} placeholder="Professor" />
+            )}
           </div>
-
-          <Field label="CGPA" name="cgpa" value={form.cgpa} onChange={handleChange} icon={<Award className="h-4 w-4" />} placeholder="8.5" type="number" step="0.01" min="0" max="10" />
 
           {/* Bio */}
           <div>

@@ -46,6 +46,10 @@ faculty_data = [
     (fac2, "EMP002", "Ramesh", "Sharma",  "Mathematics",        "Professor"),
     (fac3, "EMP003", "Priya",  "Nair",    "Computer Science",   "Assistant Professor"),
     (fac4, "EMP004", "Anita",  "Joseph",  "English",            "Lecturer"),
+    (create_user("michael@college.edu", "faculty123", "faculty"), "EMP005", "Michael", "Johnson", "Mechanical Engineering", "Professor"),
+    (create_user("sarah@college.edu", "faculty123", "faculty"), "EMP006", "Sarah", "Lee", "Electrical Engineering", "Associate Professor"),
+    (create_user("david@college.edu", "faculty123", "faculty"), "EMP007", "David", "Smith", "Business Administration", "Professor"),
+    (create_user("emma@college.edu", "faculty123", "faculty"), "EMP008", "Emma", "Wilson", "Civil Engineering", "Assistant Professor"),
 ]
 fac_profiles = {}
 for user, eid, fn, ln, dept, desig in faculty_data:
@@ -92,6 +96,18 @@ courses_def = [
     ("CS303", "Database Management Systems",  "Computer Science", 3, "EMP001"),
     ("MA301", "Discrete Mathematics",         "Mathematics",      4, "EMP002"),
     ("EN301", "Technical Communication",      "English",          2, "EMP004"),
+    ("ME401", "Thermodynamics",               "Mechanical Engineering", 4, "EMP005"),
+    ("ME402", "Fluid Mechanics",              "Mechanical Engineering", 4, "EMP005"),
+    ("ME403", "Engineering Graphics",         "Mechanical Engineering", 3, "EMP005"),
+    ("EE201", "Circuit Theory",               "Electrical Engineering", 4, "EMP006"),
+    ("EE202", "Digital Electronics",          "Electrical Engineering", 3, "EMP006"),
+    ("EE203", "Power Systems",                "Electrical Engineering", 4, "EMP006"),
+    ("BA101", "Marketing Management",         "Business Administration", 3, "EMP007"),
+    ("BA102", "Financial Accounting",         "Business Administration", 3, "EMP007"),
+    ("BA103", "Business Ethics",              "Business Administration", 2, "EMP007"),
+    ("CE301", "Structural Analysis",          "Civil Engineering", 4, "EMP008"),
+    ("CE302", "Soil Mechanics",               "Civil Engineering", 4, "EMP008"),
+    ("CE303", "Surveying & Leveling",         "Civil Engineering", 3, "EMP008"),
 ]
 course_objs = {}
 for code, name, dept, credits, fac_id in courses_def:

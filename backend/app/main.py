@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from .database.connection import engine, Base
-from .api.routes import auth, admin, student, faculty, chat, announcements, timetable, messages
+from .api.routes import auth, admin, student, faculty, chat, announcements, timetable, messages, public
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -40,6 +40,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(public.router, prefix="/api/public", tags=["Public Data"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(student.router, prefix="/api/student", tags=["Student"])

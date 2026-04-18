@@ -10,15 +10,6 @@ const Home = () => {
             <div className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 overflow-hidden border-b border-slate-200 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="max-w-3xl mx-auto text-center">
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-sm font-medium mb-8"
-                        >
-                            <ShieldCheck className="h-4 w-4 text-brand-primary" />
-                            <span>Enterprise-Grade Academic Management</span>
-                        </motion.div>
                         
                         <motion.h1 
                             initial={{ opacity: 0, y: 20 }}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Bell, Clock, Plus, Trash2, Upload, MessageSquare, Users, X, ShieldCheck, AlertCircle, Info, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Bell, Clock, Plus, Trash2, Upload, MessageSquare, Users, X, ShieldCheck, AlertCircle, Info, Lock, Edit } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import Announcements from '../student/Announcements';
@@ -28,6 +29,7 @@ const Modal = ({ title, onClose, children }) => (
 
 const FacultyDashboard = () => {
     const { user } = useContext(AuthContext);
+    const navigate = useNavigate();
     const isPending = user?.status === 'pending';
     
     const [activeTab, setActiveTab] = useState(isPending ? 'announcements' : 'materials');
@@ -143,9 +145,19 @@ const FacultyDashboard = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-brand-900 tracking-tight">Faculty Dashboard</h1>
-                <p className="text-sm font-medium text-slate-500 mt-1">Manage courses, students, timetable, and announcements.</p>
+            <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div>
+                    <h1 className="text-2xl font-bold text-brand-900 tracking-tight">Faculty Dashboard</h1>
+                    <p className="text-sm font-medium text-slate-500 mt-1">Manage courses, students, timetable, and announcements.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/faculty/profile')}
+                    className="p-2 flex items-center gap-2 rounded-lg text-brand-700 bg-brand-50 hover:bg-brand-100 transition-colors border border-brand-100 font-semibold text-sm"
+                    title="Edit Profile"
+                >
+                    <Edit className="h-4 w-4" />
+                    Edit Profile
+                </button>
             </div>
 
             <div className="flex flex-col md:flex-row gap-6">

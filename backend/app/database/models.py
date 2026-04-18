@@ -50,6 +50,8 @@ class Faculty(Base):
     last_name = Column(String)
     department = Column(String)
     designation = Column(String)
+    phone = Column(String)
+    profile_bio = Column(String, default="")
 
     user = relationship("User", back_populates="faculty_profile")
     courses = relationship("Course", back_populates="faculty")
@@ -132,3 +134,14 @@ class DirectMessage(Base):
 
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")
+
+class AdminAuditLog(Base):
+    __tablename__ = "admin_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id"))
+    action = Column(String)
+    target = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    admin = relationship("User")

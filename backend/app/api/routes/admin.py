@@ -16,6 +16,11 @@ router = APIRouter()
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "uploads", "forms")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+def log_admin_action(db: Session, admin_id: int, action: str, target: str):
+    log_entry = models.AdminAuditLog(admin_id=admin_id, action=action, target=target)
+    db.add(log_entry)
+    db.commit()
+
 # ─── STATS ───────────────────────────────────────────────────────────────────
 
 @router.get("/stats")
@@ -71,6 +76,7 @@ def approve_faculty(
         raise HTTPException(status_code=400, detail="User is not a faculty member")
     user.status = "active"
     db.commit()
+    log_admin_action(db, admin_user.id, "Approved Faculty", user.email)
     return {"message": "Faculty approved and activated"}
 
 @router.patch("/users/{user_id}/status")
@@ -89,6 +95,7 @@ def update_user_status(
         raise HTTPException(status_code=400, detail="Invalid status")
     user.status = update.status
     db.commit()
+    log_admin_action(db, admin_user.id, f"Changed Status to {update.status}", user.email)
     return {"message": f"Status updated to {update.status}"}
 
 @router.delete("/users/{user_id}")
@@ -102,8 +109,10 @@ def delete_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    email = user.email
     db.delete(user)
     db.commit()
+    log_admin_action(db, admin_user.id, "Deleted User", email)
     return {"message": "User deleted successfully"}
 
 @router.patch("/users/{user_id}/role")
@@ -122,6 +131,7 @@ def change_user_role(
         raise HTTPException(status_code=404, detail="User not found")
     user.role = update.role
     db.commit()
+    log_admin_action(db, admin_user.id, f"Changed Role to {update.role}", user.email)
     return {"message": f"Role updated to {update.role}"}
 
 # ─── STUDENTS ────────────────────────────────────────────────────────────────
@@ -322,3 +332,39 @@ def get_all_chat_logs(
             "timestamp": m.timestamp,
         })
     return result
+
+# ─── AUDIT LOGS ──────────────────────────────────────────────────────────────
+
+@router.get("/audit-logs", response_model=List[schemas.AdminAuditLogResponse])
+def get_audit_logs(
+    skip: int = 0, limit: int = 200,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_active_admin)
+):
+    logs = db.query(models.AdminAuditLog).order_by(models.AdminAuditLog.timestamp.desc()).offset(skip).limit(limit).all()
+    result = []
+    for log in logs:
+        admin = db.query(models.User).filter(models.User.id == log.admin_id).first()
+        result.append({
+            "id": log.id,
+            "admin_id": log.admin_id,
+            "admin_email": admin.email if admin else "unknown",
+            "action": log.action,
+            "target": log.target,
+            "timestamp": log.timestamp
+        })
+    return result
+
+# ─── RAG INGESTION ──────────────────────────────────────────────────────────
+
+@router.post("/rag/ingest")
+def trigger_rag_ingestion(
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_active_admin)
+):
+    from app.ai_engine.ingest import ingest_all_knowledge
+    try:
+        chunks = ingest_all_knowledge()
+        return {"message": "Ingestion complete", "chunks_processed": chunks}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

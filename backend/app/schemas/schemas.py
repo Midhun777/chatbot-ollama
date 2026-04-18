@@ -49,6 +49,18 @@ class CourseResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class PublicCourseResponse(BaseModel):
+    id: int
+    course_code: str
+    course_name: str
+    department: str
+    credits: int
+    faculty_name: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+
 
 class ChatMessageResponse(BaseModel):
     id: int
@@ -125,6 +137,27 @@ class StudentProfileResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class FacultyProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    department: Optional[str] = None
+    designation: Optional[str] = None
+    profile_bio: Optional[str] = None
+
+class FacultyProfileResponse(BaseModel):
+    id: int
+    employee_id: str
+    first_name: str
+    last_name: str
+    department: str
+    designation: str
+    phone: Optional[str] = ""
+    profile_bio: Optional[str] = ""
+
+    class Config:
+        from_attributes = True
+
 
 # ─── AI Roadmap ───────────────────────────────────────────────────
 class RoadmapRequest(BaseModel):
@@ -184,6 +217,17 @@ class UserManagementResponse(BaseModel):
     role: str
     status: str
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AdminAuditLogResponse(BaseModel):
+    id: int
+    admin_id: int
+    admin_email: str
+    action: str
+    target: str
+    timestamp: datetime
 
     class Config:
         from_attributes = True

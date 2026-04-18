@@ -68,3 +68,32 @@ def upload_material(
     db.commit()
     db.refresh(db_form)
     return db_form
+
+@router.get("/profile", response_model=schemas.FacultyProfileResponse)
+def get_faculty_profile(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_faculty)
+):
+    faculty = db.query(models.Faculty).filter(models.Faculty.user_id == current_user.id).first()
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty profile not found")
+    return faculty
+
+@router.patch("/profile", response_model=schemas.FacultyProfileResponse)
+def update_faculty_profile(
+    updates: schemas.FacultyProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_faculty)
+):
+    faculty = db.query(models.Faculty).filter(models.Faculty.user_id == current_user.id).first()
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty profile not found")
+
+    update_data = updates.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(faculty, field, value)
+
+    db.commit()
+    db.refresh(faculty)
+    return faculty
+
