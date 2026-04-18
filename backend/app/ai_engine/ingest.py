@@ -5,9 +5,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
 # Configuration paths
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "data")
+# Configuration paths
+# Root is 'backend' relative to this file (../../..)
+BACKEND_LOGIC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+DATA_DIR = os.path.join(BACKEND_LOGIC_DIR, "scripts", "data")
 KNOWLEDGE_DIR = os.path.join(DATA_DIR, "knowledge")
-CHROMA_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "chromadb")
+CHROMA_DB_DIR = os.path.join(BACKEND_LOGIC_DIR, "data", "chromadb")
 
 embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 

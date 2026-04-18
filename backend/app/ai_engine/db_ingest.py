@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 from app.database import models
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain_community.vectorstores import Chroma
 import os
 
 # Configuration paths (consistent with ingest.py)
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
-CHROMA_DB_DIR = os.path.join(DATA_DIR, "chromadb")
+BACKEND_LOGIC_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+CHROMA_DB_DIR = os.path.join(BACKEND_LOGIC_DIR, "data", "chromadb")
 
 def get_institution_info():
     """Returns hardcoded institution info as a Document."""

@@ -5,8 +5,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# We will use SQLite for local development ease unless Postgres is running
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./college_portal.db")
+# Use absolute path for SQLite to avoid split-database issues
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.path.join(BASE_DIR, "college_portal.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
 
 # If using sqlite, check_same_thread needs to be false
 engine_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
