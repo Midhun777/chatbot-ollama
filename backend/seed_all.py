@@ -61,7 +61,42 @@ for user, eid, fn, ln, dept, desig in faculty_data:
     else:
         fac_profiles[eid] = db.query(models.Faculty).filter(models.Faculty.user_id == user.id).first()
 db.commit()
-print("   Faculty profiles created")
+
+# --- 2.5 ADDING MORE FACULTY (AUTO-GENERATE 20 MORE) ---
+extra_fac_names = [
+    ("Suresh", "Rao", "Computer Science", "Professor"),
+    ("Meera", "Krishnan", "Mathematics", "Associate Professor"),
+    ("Vikram", "Seth", "Mechanical Engineering", "Assistant Professor"),
+    ("Pooja", "Hegde", "Electrical Engineering", "Lecturer"),
+    ("Anil", "Kapoor", "Business Administration", "Dean"),
+    ("Sunita", "Williams", "Civil Engineering", "Professor"),
+    ("Rahul", "Dravid", "Physical Education", "Director"),
+    ("Sania", "Mirza", "Sports Science", "Coach"),
+    ("Kiran", "Mazumdar", "Biotechnology", "Professor"),
+    ("Nandan", "Nilekani", "Information Technology", "Professor"),
+    ("Aruna", "Roy", "Social Work", "Professor"),
+    ("Amartya", "Sen", "Economics", "Professor"),
+    ("Raghuram", "Rajan", "Finance", "Professor"),
+    ("Zoya", "Akhtar", "Media Studies", "Associate Professor"),
+    ("A.R.", "Rahman", "Music", "Director"),
+    ("Gulzar", "Singh", "Literature", "Professor"),
+    ("Mary", "Kom", "Physical Education", "Coach"),
+    ("Viswanathan", "Anand", "Mathematics", "Professor"),
+    ("Shashi", "Tharoor", "English", "Professor"),
+    ("Sudha", "Murthy", "Computer Science", "Professor")
+]
+
+for i, (fn, ln, dept, desig) in enumerate(extra_fac_names):
+    email = f"{fn.lower()}.{ln.lower()}{i}@college.edu"
+    eid = f"FAC{100 + i}"
+    user = create_user(email, "faculty123", "faculty")
+    if not db.query(models.Faculty).filter(models.Faculty.user_id == user.id).first():
+        fp = models.Faculty(user_id=user.id, employee_id=eid, first_name=fn, last_name=ln, department=dept, designation=desig)
+        db.add(fp)
+        fac_profiles[eid] = fp
+
+db.commit()
+print("   Faculty profiles expanded (+20)")
 
 # ─── 3. STUDENT PROFILES ─────────────────────────────────────────────────────
 

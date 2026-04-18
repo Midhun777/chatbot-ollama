@@ -150,19 +150,25 @@ const Courses = () => {
                                                     <div className="bg-white p-3 rounded-2xl shadow-sm border border-brand-100">
                                                         <GraduationCap className="h-6 w-6 text-brand-600" />
                                                     </div>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-brand-900 text-white px-2 py-1 rounded-md">
-                                                        Course {count}
+                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-brand-900 text-white px-2.5 py-1.5 rounded-lg shadow-sm border border-white/20">
+                                                        {count} {count === 1 ? 'Subject' : 'Subjects'}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-brand-900 group-hover:text-brand-primary transition-colors">{dept}</h3>
-                                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">Academic Department</p>
+                                                    <h3 className="text-2xl font-black text-brand-900 group-hover:text-brand-primary transition-colors leading-tight">{dept}</h3>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Academic Department</p>
                                                 </div>
                                             </div>
-                                            <div className="p-4 flex items-center justify-between">
-                                                <span className="text-xs font-bold text-slate-400">{count} Active Subjects</span>
-                                                <div className="text-brand-primary font-bold text-sm group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                                                    Explore <BookOpen className="h-4 w-4" />
+                                            <div className="p-5 flex items-center justify-between bg-white border-t border-slate-100">
+                                                <div className="flex -space-x-2">
+                                                    {[1, 2, 3].map(i => (
+                                                        <div key={i} className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center">
+                                                            <Sparkles className="h-3 w-3 text-slate-300" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="text-brand-primary font-bold text-sm group-hover:translate-x-1 transition-transform inline-flex items-center gap-2">
+                                                    Explore Curriculums <BookOpen className="h-4 w-4" />
                                                 </div>
                                             </div>
                                         </motion.div>

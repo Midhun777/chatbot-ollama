@@ -2,12 +2,7 @@ import re
 
 def classify_intent(question: str) -> str:
     """
-    Classifies a user question into one of two categories:
-    - 'PERSONAL': Questions about marks, attendance, fees, profile.
-    - 'KNOWLEDGE': Questions about syllabus, college rules, placements, events.
-
-    In a production system this could use an LLM or Zero-Shot classifier, 
-    but for speed and local efficiency, a robust regex/keyword approach is used first.
+    Classifies a user question into specialized intents.
     """
     question_lower = question.lower()
 
@@ -15,6 +10,20 @@ def classify_intent(question: str) -> str:
     greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "namaste", "hola"]
     if any(question_lower == g or question_lower.startswith(g + " ") for g in greetings):
         return "GREETING"
+
+    # 1.5. Catalog Inquiries (What courses? List subjects? etc.)
+    catalog_keywords = [
+        "what course", "list course", "available course", "which subject", 
+        "list subject", "course catalog", "what are the courses", "all courses", 
+        "provide course", "courses provided", "which are the courses", "subjects offered"
+    ]
+    if any(kw in question_lower for kw in catalog_keywords):
+        return "CATALOG_INQUIRY"
+
+    # 1.6. Faculty Inquiries (How many teachers? List faculty? etc.)
+    faculty_keywords = ["how many faculty", "list faculty", "faculty directory", "who are the teachers", "list teachers", "how many teachers", "faculty members", "professors"]
+    if any(kw in question_lower for kw in faculty_keywords):
+        return "FACULTY_INQUIRY"
 
     # 2. Personal keywords
     personal_keywords = [
@@ -27,5 +36,5 @@ def classify_intent(question: str) -> str:
         if kw in question_lower:
             return "PERSONAL"
 
-    # 3. Default to RAG for general knowledge queries
+    # Default to RAG for general knowledge queries
     return "KNOWLEDGE"

@@ -150,6 +150,54 @@ def handle_chat_query(
         ]
         import random
         chat_resp = ChatResponse(answer=random.choice(greetings), source="GREETINGS")
+
+    # 2.7 Path: Catalog Inquiry (Force accuracy from DB)
+    if not chat_resp and query_intent == "CATALOG_INQUIRY":
+        courses = db.query(models.Course).all()
+        if not courses:
+            ans = "Our course catalog is currently being updated. Please check back shortly for a full list of subjects!"
+            chat_resp = ChatResponse(answer=ans, source="DATABASE")
+        else:
+            # Create a structured list for the LLM
+            course_list = "\n".join([f"- {c.course_name} ({c.course_code}) in {c.department}" for c in courses])
+            llm_prompt = (
+                f"The student asked about the courses provided. Here is the 100% accurate list from our database:\n\n"
+                f"{course_list}\n\n"
+                "Please summarize this list politely and professionally for the student. Do NOT say 'based on the context'. Just give a helpful response."
+            )
+            try:
+                # Use RAG chain's LLM but with our custom prompt to ensure accuracy
+                ans = rag_chain.get_llm().invoke(llm_prompt)
+                chat_resp = ChatResponse(answer=ans, source="DATABASE")
+            except Exception:
+                # Fallback to pure list if LLM fails
+                ans = f"Here are the courses we offer:\n\n{course_list}"
+                chat_resp = ChatResponse(answer=ans, source="DATABASE")
+
+    # 2.8 Path: Faculty Inquiry (Force accuracy from DB)
+    if not chat_resp and query_intent == "FACULTY_INQUIRY":
+        faculty = db.query(models.Faculty).all()
+        if not faculty:
+            ans = "The faculty directory is currently being updated. Please check back shortly!"
+            chat_resp = ChatResponse(answer=ans, source="DATABASE")
+        else:
+            # Create a structured list for the LLM
+            fac_list = "\n".join([f"- Dr./Prof. {f.first_name} {f.last_name} ({f.designation} in {f.department})" for f in faculty[:15]]) # Limit to 15 for prompt size
+            total_count = len(faculty)
+            llm_prompt = (
+                f"The student asked about the faculty members. We have a total of {total_count} faculty members. "
+                f"Here is a sample of the most relevant ones from our database:\n\n"
+                f"{fac_list}\n\n"
+                f"Please tell the student that we have {total_count} faculty members across all departments and highlight a few. "
+                "Be professional and encouraging."
+            )
+            try:
+                ans = rag_chain.get_llm().invoke(llm_prompt)
+                chat_resp = ChatResponse(answer=ans, source="DATABASE")
+            except Exception:
+                ans = f"We have {total_count} faculty members. Here are some of them:\n\n{fac_list}"
+                chat_resp = ChatResponse(answer=ans, source="DATABASE")
+
     if not chat_resp:
         try:
             # Let Langchain process this through Chroma & local Ollama model

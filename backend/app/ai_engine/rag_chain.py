@@ -41,21 +41,21 @@ def get_retriever():
         persist_directory=CHROMA_DB_DIR, 
         embedding_function=get_embeddings()
     )
-    # retrieve top 3 most relevant chunks
-    return vectorstore.as_retriever(search_kwargs={"k": 3})
+    # retrieve top 10 most relevant chunks for better recall
+    return vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # 4. Prompt Template
 system_prompt = (
-    "You are the official AI Assistant for the EduSphere Web Portal. "
-    "Use ONLY the following context to answer the student's question. "
-    "If the answer is not contained in the context, clearly state that you do not "
-    "know the answer and advise them to check with the administration. "
-    "Be professional, concise, and helpful."
+    "You are the official EduSphere AI Assistant. "
+    "Use the following academic context to answer the student's question accurately. "
+    "If the answer is found in the context, provide it clearly. "
+    "If the specific answer is not in the context, do NOT say 'it is not valid'. "
+    "Simply provide the best possible guidance based on the context and advise checking the portal or administration."
     "\n\nContext:"
     "\n{context}"
 )
 
-prompt = PromptTemplate.from_template(system_prompt + "\n\nQuestion: {input}\nAnswer:")
+prompt = PromptTemplate.from_template(system_prompt + "\n\nStudent Question: {input}\nAssistant Answer:")
 
 def ask_question(question: str):
     """
