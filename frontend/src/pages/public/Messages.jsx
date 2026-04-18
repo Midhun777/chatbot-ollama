@@ -120,12 +120,11 @@ const Messages = () => {
                                 <MessageSquare className="h-5 w-5 text-indigo-600" />
                                 Messages
                             </h2>
-                            <button 
-                                onClick={() => setShowContacts(!showContacts)}
-                                className={`p-2 rounded-xl transition-all ${showContacts ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                <Search className="h-4 w-4" />
-                            </button>
+                        </div>
+                        
+                        <div className="flex bg-slate-100 p-1 rounded-xl mb-4">
+                            <button onClick={() => setShowContacts(false)} className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${!showContacts ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>Recent Chats</button>
+                            <button onClick={() => setShowContacts(true)} className={`flex-1 text-xs font-bold py-2 rounded-lg transition-all ${showContacts ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>Directory</button>
                         </div>
                         
                         <div className="relative">

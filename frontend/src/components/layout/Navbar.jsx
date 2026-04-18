@@ -45,10 +45,6 @@ const Navbar = () => {
                         <Link to="/courses" className="text-slate-600 hover:text-brand-900 font-medium px-2 py-1 transition-colors">
                             Courses
                         </Link>
-                        <Link to="/guest-chat" className="text-brand-primary hover:text-brand-auth-hover font-bold px-2 py-1 transition-colors flex items-center gap-1.5 border-l border-slate-200 pl-4">
-                            <Sparkles className="h-4 w-4" />
-                            AI Assistant
-                        </Link>
                         
                         {!user ? (
                             <div className="flex items-center gap-3">

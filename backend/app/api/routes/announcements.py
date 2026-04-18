@@ -53,3 +53,19 @@ def delete_announcement(
     db.delete(ann)
     db.commit()
     return {"message": "Deleted successfully"}
+
+@router.put("/{announcement_id}/toggle-pin", response_model=schemas.AnnouncementResponse)
+def toggle_pin_announcement(
+    announcement_id: int,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
+):
+    """Admin or Faculty: Toggle the pinned status of an announcement."""
+    ann = db.query(models.Announcement).filter(models.Announcement.id == announcement_id).first()
+    if not ann:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    
+    ann.is_pinned = not ann.is_pinned
+    db.commit()
+    db.refresh(ann)
+    return ann

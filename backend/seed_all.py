@@ -62,24 +62,23 @@ print("  ✅ Faculty profiles created")
 # ─── 3. STUDENT PROFILES ─────────────────────────────────────────────────────
 
 students_data = [
-    (stu1, "CS2401", "John",   "Mathew",  "Computer Science", 3, "+91 9876543210", 8.7),
-    (stu2, "CS2402", "Priya",  "Sharma",  "Computer Science", 3, "+91 9876543211", 9.1),
-    (stu3, "CS2403", "Arjun",  "Menon",   "Computer Science", 3, "+91 9876543212", 7.8),
+    (stu1, "CS2401", "John",   "Mathew",  "Computer Science", 3, "+91 9876543210"),
+    (stu2, "CS2402", "Priya",  "Sharma",  "Computer Science", 3, "+91 9876543211"),
+    (stu3, "CS2403", "Arjun",  "Menon",   "Computer Science", 3, "+91 9876543212"),
 ]
 stu_profiles = {}
-for user, enr, fn, ln, dept, sem, phone, cgpa in students_data:
+for user, enr, fn, ln, dept, sem, phone in students_data:
     existing = db.query(models.Student).filter(models.Student.user_id == user.id).first()
     if not existing:
         sp = models.Student(
             user_id=user.id, enrollment_no=enr, first_name=fn, last_name=ln,
-            department=dept, current_semester=sem, phone=phone, cgpa=cgpa,
+            department=dept, current_semester=sem, phone=phone,
             profile_bio=f"Passionate {dept} student at Smart College."
         )
         db.add(sp)
         db.flush()
         stu_profiles[enr] = sp
     else:
-        existing.cgpa = cgpa
         existing.profile_bio = f"Passionate {dept} student at Smart College."
         stu_profiles[enr] = existing
 db.commit()
@@ -109,50 +108,6 @@ for code, name, dept, credits, fac_id in courses_def:
 db.commit()
 print("  ✅ Courses created")
 
-# ─── 5. ATTENDANCE ───────────────────────────────────────────────────────────
-
-for enr, sp in stu_profiles.items():
-    existing_att = db.query(models.Attendance).filter(models.Attendance.student_id == sp.id).count()
-    if existing_att > 0:
-        continue
-    base_date = datetime.now() - timedelta(days=60)
-    for course_code, co in course_objs.items():
-        for day_offset in range(0, 60, 3):  # class every 3 days
-            date = base_date + timedelta(days=day_offset)
-            if date.weekday() >= 6:  # skip Sunday
-                continue
-            # Randomise attendance (more present than absent)
-            status = "Present" if random.random() > 0.2 else "Absent"
-            att = models.Attendance(student_id=sp.id, course_id=co.id, date=date, status=status)
-            db.add(att)
-db.commit()
-print("  ✅ Attendance records created")
-
-# ─── 6. MARKS ────────────────────────────────────────────────────────────────
-
-marks_data = {
-    "CS2401": {"CS301": (42, 50), "CS302": (38, 50), "CS303": (45, 50), "MA301": (40, 50), "EN301": (46, 50)},
-    "CS2402": {"CS301": (48, 50), "CS302": (45, 50), "CS303": (47, 50), "MA301": (44, 50), "EN301": (49, 50)},
-    "CS2403": {"CS301": (35, 50), "CS302": (33, 50), "CS303": (38, 50), "MA301": (30, 50), "EN301": (40, 50)},
-}
-for enr, sp in stu_profiles.items():
-    existing_marks = db.query(models.Mark).filter(models.Mark.student_id == sp.id).count()
-    if existing_marks > 0:
-        continue
-    for code, (got, total) in marks_data.get(enr, {}).items():
-        co = course_objs.get(code)
-        if not co:
-            continue
-        for exam_type, multiplier in [("Internal", 0.4), ("Mid-Sem", 0.8), ("Final", 1.0)]:
-            m = models.Mark(
-                student_id=sp.id, course_id=co.id,
-                exam_type=exam_type,
-                marks_obtained=round(got * multiplier, 1),
-                total_marks=round(total * multiplier, 1)
-            )
-            db.add(m)
-db.commit()
-print("  ✅ Marks created")
 
 # ─── 7. ANNOUNCEMENTS ────────────────────────────────────────────────────────
 

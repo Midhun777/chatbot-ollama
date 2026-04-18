@@ -136,10 +136,7 @@ def get_all_students(
     for s in students:
         user = db.query(models.User).filter(models.User.id == s.user_id).first()
         # Attendance
-        attendances = db.query(models.Attendance).filter(models.Attendance.student_id == s.id).all()
-        total = len(attendances)
-        present = sum(1 for a in attendances if a.status == "Present")
-        att_pct = round((present / total * 100), 1) if total > 0 else 0
+        att_pct = 0
         result.append({
             "id": s.id,
             "user_id": s.user_id,
@@ -150,7 +147,7 @@ def get_all_students(
             "department": s.department,
             "current_semester": s.current_semester,
             "phone": s.phone or "",
-            "cgpa": s.cgpa or 0.0,
+            "cgpa": 0.0,
             "attendance_pct": att_pct,
             "profile_bio": s.profile_bio or "",
         })

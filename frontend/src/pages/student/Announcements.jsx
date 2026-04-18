@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Pin, Tag, Plus, Trash2, AlertCircle, XCircle } from 'lucide-react';
+import { Bell, Pin, PinOff, Tag, Plus, Trash2, AlertCircle, XCircle } from 'lucide-react';
 import api from '../../services/api';
 
 const CATEGORY_STYLES = {
@@ -53,6 +53,15 @@ const Announcements = ({ isAdmin = false }) => {
       setAnnouncements(prev => prev.filter(a => a.id !== id));
     } catch {
       setError('Failed to delete announcement.');
+    }
+  };
+
+  const handleTogglePin = async (id) => {
+    try {
+      await api.put(`/announcements/${id}/toggle-pin`);
+      await fetchAnnouncements();
+    } catch {
+      setError('Failed to toggle pin status.');
     }
   };
 
@@ -189,12 +198,22 @@ const Announcements = ({ isAdmin = false }) => {
                       <p className="text-xs text-slate-400 font-semibold mt-3">{formatDate(ann.created_at)}</p>
                     </div>
                     {isAdmin && (
-                      <button
-                        onClick={() => handleDelete(ann.id)}
-                        className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        <button
+                          onClick={() => handleTogglePin(ann.id)}
+                          className={`p-2 rounded-xl transition-colors ${ann.is_pinned ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50' : 'text-slate-300 hover:text-amber-500 hover:bg-amber-50'}`}
+                          title={ann.is_pinned ? "Unpin Announcement" : "Pin Announcement"}
+                        >
+                          {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ann.id)}
+                          className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </motion.div>

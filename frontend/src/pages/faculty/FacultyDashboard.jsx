@@ -43,6 +43,8 @@ const FacultyDashboard = () => {
 
     // Forms / Materials
     const [materials, setMaterials] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadMsg, setUploadMsg] = useState('');
 
     useEffect(() => {
         fetchCourses();
@@ -337,8 +339,8 @@ const FacultyDashboard = () => {
                         {/* ANNOUNCEMENTS TAB */}
                         {activeTab === 'announcements' && (
                             <div className="">
-                                {/* Reusing existing Announcements component component with admin privileges enabled */}
-                                <Announcements isAdmin={true} />
+                                {/* Only give admin UI privileges if the faculty account is approved */}
+                                <Announcements isAdmin={!isPending} />
                             </div>
                         )}
 

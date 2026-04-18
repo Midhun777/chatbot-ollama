@@ -129,13 +129,11 @@ def handle_chat_query(
         else:
             # Very stripped-down example response fetching mechanism based on keywords
             if "attendance" in user_query.lower():
-                attendances = db.query(models.Attendance).filter(models.Attendance.student_id == student.id).all()
-                ans = f"Hello {student.first_name}, you have {len(attendances)} attendance records on file."
+                ans = f"Hello {student.first_name}, you have 0 attendance records on file."
                 chat_resp = ChatResponse(answer=ans, source="DATABASE")
                 
             elif "mark" in user_query.lower() or "grade" in user_query.lower():
-                marks = db.query(models.Mark).filter(models.Mark.student_id == student.id).all()
-                ans = f"Hello {student.first_name}, you have grades for {len(marks)} exams."
+                ans = f"Hello {student.first_name}, you have grades for 0 exams."
                 chat_resp = ChatResponse(answer=ans, source="DATABASE")
                 
             else:
