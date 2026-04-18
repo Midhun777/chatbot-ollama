@@ -5,6 +5,7 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_student
+from app.core.logging import log_system_activity
 
 router = APIRouter()
 
@@ -54,6 +55,7 @@ def update_student_profile(
 
     db.commit()
     db.refresh(student)
+    log_system_activity(db, current_user.id, "Profile Update", f"Student: {current_user.email}")
     return student
 
 

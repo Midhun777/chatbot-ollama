@@ -4,6 +4,7 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.core.security import verify_password, get_password_hash, create_access_token
+from app.core.logging import log_system_activity
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from app.core import security
@@ -58,6 +59,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             db.add(faculty_profile)
         
         db.commit()
+        log_system_activity(db, new_user.id, "User Registered", f"Role: {new_user.role}, Status: {new_user.status}")
         print("DEBUG: Profile created successfully")
         
         access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)

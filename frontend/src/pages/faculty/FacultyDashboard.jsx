@@ -7,6 +7,8 @@ import { AuthContext } from '../../context/AuthContext';
 import Announcements from '../student/Announcements';
 import Messages from '../public/Messages';
 
+const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -41,7 +43,16 @@ const FacultyDashboard = () => {
     // Timetable
     const [timetable, setTimetable] = useState([]);
     const [showTTForm, setShowTTForm] = useState(false);
-    const [ttForm, setTtForm] = useState({ department:'', semester:1, day_of_week:'Monday', time_slot:'', subject_name:'', subject_code:'', room:'', faculty_name:'' });
+    const [ttForm, setTtForm] = useState({ 
+        department: user?.faculty_profile?.department || '', 
+        semester: 1, 
+        day_of_week: 'Monday', 
+        time_slot: '', 
+        subject_name: '', 
+        subject_code: '', 
+        room: '', 
+        faculty_name: user?.faculty_profile ? `${user.faculty_profile.first_name} ${user.faculty_profile.last_name}` : '' 
+    });
 
     // Forms / Materials
     const [materials, setMaterials] = useState([]);
@@ -94,7 +105,41 @@ const FacultyDashboard = () => {
     };
 
     const fetchTimetable = async () => {
-        try { const r = await api.get('/timetable/'); setTimetable(r.data); } catch (e) { console.error(e); }
+        try { 
+            // For faculty, we want to see their department's timetable
+            if (!user?.faculty_profile?.department) return;
+            const r = await api.get(`/timetable/?dept=${encodeURIComponent(user.faculty_profile.department)}`); 
+            setTimetable(r.data); 
+        } catch (e) { console.error(e); }
+    };
+
+    const groupTT = (entries) => {
+        const grouped = DAYS_ORDER.reduce((acc, day) => ({ ...acc, [day]: [] }), {});
+        entries.forEach(e => {
+            if (grouped[e.day_of_week]) grouped[e.day_of_week].push(e);
+        });
+        return grouped;
+    };
+
+    const addTTEntry = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/timetable/', ttForm);
+            setShowTTForm(false);
+            fetchTimetable();
+        } catch (err) {
+            alert("Failed to add timetable entry.");
+        }
+    };
+
+    const deleteTTEntry = async (id) => {
+        if (!window.confirm("Delete this entry?")) return;
+        try {
+            await api.delete(`/timetable/${id}`);
+            fetchTimetable();
+        } catch (err) {
+            alert("Failed to delete entry.");
+        }
     };
     
     const fetchMaterials = async () => {
@@ -121,26 +166,6 @@ const FacultyDashboard = () => {
           fetchMaterials();
         } catch { setUploadMsg('✗ Upload failed.'); }
         finally { setIsUploading(false); setTimeout(() => setUploadMsg(''), 4000); }
-    };
-
-    // Timetable Handlers
-    const DAYS_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const groupTT = (entries) => {
-      const g = {};
-      DAYS_ORDER.forEach(d => { g[d] = entries.filter(e => e.day_of_week === d); });
-      return g;
-    };
-    
-    const deleteTTEntry = async (id) => {
-      if (!window.confirm('Delete this timetable entry?')) return;
-      try { await api.delete(`/timetable/${id}`); setTimetable(p => p.filter(t => t.id !== id)); }
-      catch { alert('Failed to delete'); }
-    };
-  
-    const addTTEntry = async (e) => {
-      e.preventDefault();
-      try { const r = await api.post('/timetable/', ttForm); setTimetable(p => [...p, r.data]); setShowTTForm(false); }
-      catch { alert('Failed to add entry'); }
     };
 
     return (

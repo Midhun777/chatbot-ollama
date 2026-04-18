@@ -5,26 +5,44 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_student, get_current_active_admin, get_current_admin_or_faculty
+from app.core.logging import log_system_activity
 
 router = APIRouter()
 
 DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+from typing import List, Optional
+
+router = APIRouter()
+
+DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+@router.get("/available")
+def get_available_timetables(db: Session = Depends(get_db)):
+    """Returns a list of unique {department, semester} combinations available."""
+    results = db.query(models.Timetable.department, models.Timetable.semester).distinct().all()
+    return [{"department": r.department, "semester": r.semester} for r in results]
+
 @router.get("/", response_model=List[schemas.TimetableEntry])
-def get_my_timetable(
+def get_timetable(
+    dept: Optional[str] = None,
+    sem: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_student)
 ):
-    """Returns the timetable for the current student's department & semester."""
-    student = db.query(models.Student).filter(models.Student.user_id == current_user.id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student profile not found")
+    """Returns the timetable for a specific department & semester, or the user's default."""
+    if not dept or not sem:
+        student = db.query(models.Student).filter(models.Student.user_id == current_user.id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student profile not found")
+        dept = student.department
+        sem = student.current_semester
 
     entries = (
         db.query(models.Timetable)
         .filter(
-            models.Timetable.department == student.department,
-            models.Timetable.semester == student.current_semester
+            models.Timetable.department == dept,
+            models.Timetable.semester == sem
         )
         .all()
     )
@@ -47,6 +65,7 @@ def create_timetable_entry(
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
+    log_system_activity(db, admin_user.id, "Added Timetable Entry", f"{db_entry.subject_name} ({db_entry.day_of_week})")
     return db_entry
 
 @router.delete("/{entry_id}")
@@ -59,8 +78,10 @@ def delete_timetable_entry(
     db_entry = db.query(models.Timetable).filter(models.Timetable.id == entry_id).first()
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found")
+    subject = db_entry.subject_name
     db.delete(db_entry)
     db.commit()
+    log_system_activity(db, admin_user.id, "Deleted Timetable Entry", f"Subject: {subject}")
     return {"message": "Deleted successfully"}
 
 @router.post("/seed")
@@ -91,4 +112,5 @@ def seed_timetable(
     for entry in sample_data:
         db.add(models.Timetable(**entry))
     db.commit()
+    log_system_activity(db, admin_user.id, "Seeded Timetable", f"Added {len(sample_data)} entries")
     return {"message": f"Seeded {len(sample_data)} timetable entries."}

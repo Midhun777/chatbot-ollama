@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_faculty
+from app.core.logging import log_system_activity
 from datetime import datetime
 
 router = APIRouter()
@@ -67,6 +68,7 @@ def upload_material(
     db.add(db_form)
     db.commit()
     db.refresh(db_form)
+    log_system_activity(db, current_user.id, "Faculty Upload", f"Title: {title}")
     return db_form
 
 @router.get("/profile", response_model=schemas.FacultyProfileResponse)
@@ -95,5 +97,6 @@ def update_faculty_profile(
 
     db.commit()
     db.refresh(faculty)
+    log_system_activity(db, current_user.id, "Profile Update", f"Faculty: {current_user.email}")
     return faculty
 

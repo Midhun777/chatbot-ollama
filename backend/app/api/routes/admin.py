@@ -9,6 +9,7 @@ from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_active_admin
 from app.core.security import get_password_hash
+from app.core.logging import log_system_activity
 from datetime import datetime
 
 router = APIRouter()
@@ -16,10 +17,6 @@ router = APIRouter()
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "uploads", "forms")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-def log_admin_action(db: Session, admin_id: int, action: str, target: str):
-    log_entry = models.AdminAuditLog(admin_id=admin_id, action=action, target=target)
-    db.add(log_entry)
-    db.commit()
 
 # ─── STATS ───────────────────────────────────────────────────────────────────
 
@@ -76,7 +73,7 @@ def approve_faculty(
         raise HTTPException(status_code=400, detail="User is not a faculty member")
     user.status = "active"
     db.commit()
-    log_admin_action(db, admin_user.id, "Approved Faculty", user.email)
+    log_system_activity(db, admin_user.id, "Approved Faculty", f"Faculty: {user.email}")
     return {"message": "Faculty approved and activated"}
 
 @router.patch("/users/{user_id}/status")
@@ -95,7 +92,7 @@ def update_user_status(
         raise HTTPException(status_code=400, detail="Invalid status")
     user.status = update.status
     db.commit()
-    log_admin_action(db, admin_user.id, f"Changed Status to {update.status}", user.email)
+    log_system_activity(db, admin_user.id, "Changed Status", f"User: {user.email} -> {update.status}")
     return {"message": f"Status updated to {update.status}"}
 
 @router.delete("/users/{user_id}")
@@ -112,7 +109,7 @@ def delete_user(
     email = user.email
     db.delete(user)
     db.commit()
-    log_admin_action(db, admin_user.id, "Deleted User", email)
+    log_system_activity(db, admin_user.id, "Deleted User", f"Target: {email}")
     return {"message": "User deleted successfully"}
 
 @router.patch("/users/{user_id}/role")
@@ -131,7 +128,7 @@ def change_user_role(
         raise HTTPException(status_code=404, detail="User not found")
     user.role = update.role
     db.commit()
-    log_admin_action(db, admin_user.id, f"Changed Role to {update.role}", user.email)
+    log_system_activity(db, admin_user.id, "Changed Role", f"User: {user.email} -> {update.role}")
     return {"message": f"Role updated to {update.role}"}
 
 # ─── STUDENTS ────────────────────────────────────────────────────────────────
@@ -252,6 +249,7 @@ def upload_form(
     db.add(db_form)
     db.commit()
     db.refresh(db_form)
+    log_system_activity(db, admin_user.id, "Uploaded Form", f"Title: {title}")
     return db_form
 
 @router.get("/forms", response_model=List[schemas.DocumentFormResponse])
@@ -273,8 +271,10 @@ def delete_form(
     # Delete the actual file too
     if os.path.exists(form.file_path):
         os.remove(form.file_path)
+    title = form.title
     db.delete(form)
     db.commit()
+    log_system_activity(db, admin_user.id, "Deleted Form", f"Title: {title}")
     return {"message": "Form deleted"}
 
 # ─── TIMETABLE ───────────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ def get_all_timetable(
 ):
     return db.query(models.Timetable).order_by(models.Timetable.department, models.Timetable.semester, models.Timetable.day_of_week, models.Timetable.time_slot).all()
 
-@router.post("/timetable")
+@router.post("/timetable", response_model=schemas.TimetableEntry)
 def create_timetable_entry(
     entry: schemas.TimetableCreate,
     db: Session = Depends(get_db),
@@ -296,6 +296,7 @@ def create_timetable_entry(
     db.add(tt)
     db.commit()
     db.refresh(tt)
+    log_system_activity(db, admin_user.id, "Added Timetable Entry", f"{tt.subject_name} ({tt.day_of_week})")
     return tt
 
 @router.delete("/timetable/{entry_id}")
@@ -307,8 +308,10 @@ def delete_timetable_entry(
     entry = db.query(models.Timetable).filter(models.Timetable.id == entry_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
+    subject = entry.subject_name
     db.delete(entry)
     db.commit()
+    log_system_activity(db, admin_user.id, "Deleted Timetable Entry", f"Subject: {subject}")
     return {"message": "Deleted"}
 
 # ─── CHAT LOGS ───────────────────────────────────────────────────────────────
@@ -355,16 +358,6 @@ def get_audit_logs(
         })
     return result
 
-# ─── RAG INGESTION ──────────────────────────────────────────────────────────
-
-@router.post("/rag/ingest")
-def trigger_rag_ingestion(
-    db: Session = Depends(get_db),
-    admin_user: models.User = Depends(get_current_active_admin)
-):
-    from app.ai_engine.ingest import ingest_all_knowledge
-    try:
-        chunks = ingest_all_knowledge()
-        return {"message": "Ingestion complete", "chunks_processed": chunks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

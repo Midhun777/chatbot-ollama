@@ -105,7 +105,7 @@ const Courses = () => {
             </div>
 
             {/* Courses Grid Container */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pb-20">
                 {error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 flex items-center justify-center p-4 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm text-rose-700">
                         <AlertCircle className="h-5 w-5 mr-3" />
@@ -126,71 +126,133 @@ const Courses = () => {
                             ))}
                         </div>
                     </div>
-                ) : filteredCourses.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-white rounded-3xl border border-slate-200 shadow-sm">
-                        <BookOpen className="h-16 w-16 mx-auto mb-4 text-slate-300 opacity-50" />
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">No courses found</h3>
-                        <p className="text-slate-500 font-medium">Try adjusting your search criteria or changing the department filter.</p>
-                        <button onClick={() => {setSearchQuery(''); setSelectedDept('All');}} className="mt-6 font-bold text-brand-600 hover:text-brand-700 underline underline-offset-4 decoration-2">Clear all filters</button>
-                    </motion.div>
                 ) : (
-                    <motion.div 
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="show"
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                    >
-                        <AnimatePresence>
-                            {filteredCourses.map(course => (
-                                <motion.div 
-                                    key={course.id}
-                                    variants={cardVariants}
-                                    layout
-                                    className="group bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
-                                >
-                                    <div className="p-1">
-                                        <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-50 rounded-t-[22px] p-6 relative overflow-hidden group-hover:from-brand-50 group-hover:to-white transition-colors duration-500">
-                                            {/* Abstract tech shapes via simple CSS */}
-                                            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-primary/5 rounded-full blur-xl group-hover:bg-brand-primary/20 transition-all duration-500" />
-                                            <div className="absolute top-4 right-4">
-                                                <span className="bg-white/80 backdrop-blur-sm shadow-sm text-brand-900 text-xs font-black px-3 py-1.5 rounded-full border border-slate-100 uppercase tracking-widest block">
-                                                    {course.course_code}
-                                                </span>
-                                            </div>
-                                            <div className="mt-auto h-full flex items-end">
-                                               <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 inline-block">
-                                                    <BookOpen className="h-6 w-6 text-brand-600" />
-                                               </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="p-6 flex-1 flex flex-col">
-                                        <div className="mb-4">
-                                            <span className="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2 block">{course.department}</span>
-                                            <h3 className="text-xl font-bold text-slate-900 leading-tight group-hover:text-brand-700 transition-colors line-clamp-2">{course.course_name}</h3>
-                                        </div>
-                                        
-                                        <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-100">
-                                            <div className="flex items-center gap-2 text-slate-600">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden">
-                                                    <GraduationCap className="h-4 w-4 text-slate-500" />
+                    <AnimatePresence mode="wait">
+                        {selectedDept === 'All' ? (
+                            <motion.div 
+                                key="departments"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                            >
+                                {departments.filter(d => d !== 'All').map(dept => {
+                                    const count = courses.filter(c => c.department === dept).length;
+                                    return (
+                                        <motion.div
+                                            key={dept}
+                                            whileHover={{ y: -5 }}
+                                            onClick={() => setSelectedDept(dept)}
+                                            className="formal-card p-1 cursor-pointer group"
+                                        >
+                                            <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl p-6 flex flex-col justify-between group-hover:from-brand-50 transition-all duration-500">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="bg-white p-3 rounded-2xl shadow-sm border border-brand-100">
+                                                        <GraduationCap className="h-6 w-6 text-brand-600" />
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-brand-900 text-white px-2 py-1 rounded-md">
+                                                        Course {count}
+                                                    </span>
                                                 </div>
-                                                <div className="text-sm">
-                                                    <p className="font-semibold text-slate-900 leading-none">{course.faculty_name || 'TBA'}</p>
-                                                    <p className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Instructor</p>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-brand-900 group-hover:text-brand-primary transition-colors">{dept}</h3>
+                                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">Academic Department</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200">
-                                                <Clock className="h-3.5 w-3.5 text-slate-400" />
-                                                <span className="text-xs font-bold text-slate-700">{course.credits} Credits</span>
+                                            <div className="p-4 flex items-center justify-between">
+                                                <span className="text-xs font-bold text-slate-400">{count} Active Subjects</span>
+                                                <div className="text-brand-primary font-bold text-sm group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                                                    Explore <BookOpen className="h-4 w-4" />
+                                                </div>
                                             </div>
+                                        </motion.div>
+                                    );
+                                })}
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="subjects"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-8"
+                            >
+                                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                                    <div className="flex items-center gap-4">
+                                        <button 
+                                            onClick={() => setSelectedDept('All')} 
+                                            className="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-brand-900">{selectedDept}</h3>
+                                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Subject Catalog</p>
                                         </div>
                                     </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </motion.div>
+                                    <span className="hidden md:block text-xs font-black text-slate-400 uppercase tracking-tighter">Viewing {filteredCourses.length} Curriculums</span>
+                                </div>
+
+                                {filteredCourses.length === 0 ? (
+                                    <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                                        <BookOpen className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                                        <p className="text-slate-500 font-bold">No subjects found matching your criteria.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                        {filteredCourses.map(course => (
+                                            <motion.div 
+                                                key={course.id}
+                                                variants={cardVariants}
+                                                initial="hidden"
+                                                animate="show"
+                                                className="group bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
+                                            >
+                                                <div className="p-1">
+                                                    <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-50 rounded-t-[22px] p-6 relative overflow-hidden group-hover:from-brand-50 group-hover:to-white transition-colors duration-500">
+                                                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-primary/5 rounded-full blur-xl group-hover:bg-brand-primary/20 transition-all duration-500" />
+                                                        <div className="absolute top-4 right-4">
+                                                            <span className="bg-white/80 backdrop-blur-sm shadow-sm text-brand-900 text-xs font-black px-3 py-1.5 rounded-full border border-slate-100 uppercase tracking-widest block">
+                                                                {course.course_code}
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-auto h-full flex items-end">
+                                                           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 inline-block">
+                                                                <BookOpen className="h-6 w-6 text-brand-600" />
+                                                           </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="p-6 flex-1 flex flex-col">
+                                                    <div className="mb-4">
+                                                        <span className="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2 block">{course.department}</span>
+                                                        <h3 className="text-xl font-bold text-slate-900 leading-tight group-hover:text-brand-700 transition-colors line-clamp-2">{course.course_name}</h3>
+                                                    </div>
+                                                    
+                                                    <div className="mt-auto pt-6 flex items-center justify-between border-t border-slate-100">
+                                                        <div className="flex items-center gap-2 text-slate-600">
+                                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden">
+                                                                <GraduationCap className="h-4 w-4 text-slate-500" />
+                                                            </div>
+                                                            <div className="text-sm">
+                                                                <p className="font-semibold text-slate-900 leading-none">{course.faculty_name || 'TBA'}</p>
+                                                                <p className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Instructor</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200">
+                                                            <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                                            <span className="text-xs font-bold text-slate-700">{course.credits} Credits</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 )}
             </div>
         </div>

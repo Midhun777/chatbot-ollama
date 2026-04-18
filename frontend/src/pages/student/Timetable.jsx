@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, User, ChevronDown, BookOpen } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, ChevronDown, BookOpen, Search, Save, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -15,27 +16,74 @@ const DAY_COLORS = {
 };
 
 const Timetable = () => {
+  const { user, login } = useContext(AuthContext);
   const [schedule, setSchedule] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeDay, setActiveDay] = useState('Monday');
+  
+  // Browsing state
+  const [available, setAvailable] = useState([]);
+  const [browsing, setBrowsing] = useState({ dept: '', sem: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
+    fetchAvailable();
     fetchTimetable();
   }, []);
 
-  const fetchTimetable = async () => {
+  const fetchAvailable = async () => {
     try {
-      const res = await api.get('/timetable/');
+        const res = await api.get('/timetable/available');
+        setAvailable(res.data);
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchTimetable = async (dept = null, sem = null) => {
+    setIsLoading(true);
+    try {
+      const url = (dept && sem) ? `/timetable/?dept=${encodeURIComponent(dept)}&sem=${sem}` : '/timetable/';
+      const res = await api.get(url);
       setSchedule(res.data);
       // Set active day to today if possible
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
       if (DAYS.includes(today)) setActiveDay(today);
+      setError('');
     } catch (err) {
-      setError('Could not load timetable. Make sure your department and semester are set in your profile.');
+      setError('Timetable not found for this selection.');
+      setSchedule([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBrowse = (dept, sem) => {
+    setBrowsing({ dept, sem });
+    fetchTimetable(dept, sem);
+  };
+
+  const saveToProfile = async () => {
+    if (!browsing.dept || !browsing.sem) return;
+    setIsSaving(true);
+    try {
+        await api.patch('/student/profile', { 
+            department: browsing.dept, 
+            current_semester: parseInt(browsing.sem) 
+        });
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (e) {
+        alert("Failed to save to profile");
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
+  const isCurrentSelectionSaved = () => {
+    if (!browsing.dept) return true; // Default view is always saved
+    return user?.student_profile?.department === browsing.dept && 
+           user?.student_profile?.current_semester === parseInt(browsing.sem);
   };
 
   const byDay = DAYS.reduce((acc, day) => {
@@ -49,13 +97,51 @@ const Timetable = () => {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg">
-            <Calendar className="h-7 w-7 text-white" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg">
+                <Calendar className="h-7 w-7 text-white" />
+            </div>
+            <div>
+                <h1 className="text-3xl font-black text-slate-900">Class Schedule</h1>
+                <p className="text-slate-500 font-medium">
+                    {browsing.dept ? `${browsing.dept} (Sem ${browsing.sem})` : 'Your Enrolled Timetable'}
+                </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-slate-900">Class Schedule</h1>
-            <p className="text-slate-500 font-medium">Your weekly timetable</p>
+
+          <div className="flex items-center gap-3">
+              <div className="relative group">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <select 
+                    value={`${browsing.dept}|${browsing.sem}`}
+                    onChange={(e) => {
+                        const [d, s] = e.target.value.split('|');
+                        handleBrowse(d, s);
+                    }}
+                    className="pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer transition-all hover:bg-slate-50 min-w-[240px]"
+                  >
+                      <option value="|">My Enrolled Schedule</option>
+                      {available.map((a, idx) => (
+                          <option key={idx} value={`${a.department}|${a.semester}`}>
+                              {a.department} - Semester {a.semester}
+                          </option>
+                      ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              </div>
+
+              {browsing.dept && !isCurrentSelectionSaved() && (
+                  <button 
+                    onClick={saveToProfile}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                      {isSaving ? 'Saving...' : saveSuccess ? <><CheckCircle className="h-4 w-4"/> Saved</> : <><Save className="h-4 w-4"/> Save to Profile</>}
+                  </button>
+              )}
           </div>
         </div>
 

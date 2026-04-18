@@ -5,6 +5,7 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_user, get_current_admin_or_faculty
+from app.core.logging import log_system_activity
 
 router = APIRouter()
 
@@ -38,6 +39,7 @@ def create_announcement(
     db.add(db_announcement)
     db.commit()
     db.refresh(db_announcement)
+    log_system_activity(db, admin_user.id, "Created Announcement", f"Title: {db_announcement.title}")
     return db_announcement
 
 @router.delete("/{announcement_id}")
@@ -50,8 +52,10 @@ def delete_announcement(
     ann = db.query(models.Announcement).filter(models.Announcement.id == announcement_id).first()
     if not ann:
         raise HTTPException(status_code=404, detail="Announcement not found")
+    title = ann.title
     db.delete(ann)
     db.commit()
+    log_system_activity(db, admin_user.id, "Deleted Announcement", f"Title: {title}")
     return {"message": "Deleted successfully"}
 
 @router.put("/{announcement_id}/toggle-pin", response_model=schemas.AnnouncementResponse)
@@ -68,4 +72,6 @@ def toggle_pin_announcement(
     ann.is_pinned = not ann.is_pinned
     db.commit()
     db.refresh(ann)
+    action = "Pinned" if ann.is_pinned else "Unpinned"
+    log_system_activity(db, admin_user.id, f"{action} Announcement", f"Title: {ann.title}")
     return ann

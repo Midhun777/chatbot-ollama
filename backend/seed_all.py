@@ -15,7 +15,7 @@ import random, uuid
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
-print("🌱 Starting full rich seed...")
+print("Starting full rich seed...")
 
 # ─── 1. USERS ────────────────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ stu1   = create_user("john@college.edu",    "student123", "student")
 stu2   = create_user("priya.s@college.edu", "student123", "student")
 stu3   = create_user("arjun@college.edu",   "student123", "student")
 db.commit()
-print("  ✅ Users created")
+print("   Users created")
 
 # ─── 2. FACULTY PROFILES ─────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ for user, eid, fn, ln, dept, desig in faculty_data:
     else:
         fac_profiles[eid] = db.query(models.Faculty).filter(models.Faculty.user_id == user.id).first()
 db.commit()
-print("  ✅ Faculty profiles created")
+print("   Faculty profiles created")
 
 # ─── 3. STUDENT PROFILES ─────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ for user, enr, fn, ln, dept, sem, phone in students_data:
         existing.profile_bio = f"Passionate {dept} student at Smart College."
         stu_profiles[enr] = existing
 db.commit()
-print("  ✅ Student profiles created")
+print("   Student profiles created")
 
 # ─── 4. COURSES ──────────────────────────────────────────────────────────────
 
@@ -122,7 +122,7 @@ for code, name, dept, credits, fac_id in courses_def:
     else:
         course_objs[code] = existing
 db.commit()
-print("  ✅ Courses created")
+print("   Courses created")
 
 
 # ─── 7. ANNOUNCEMENTS ────────────────────────────────────────────────────────
@@ -130,66 +130,89 @@ print("  ✅ Courses created")
 existing_ann = db.query(models.Announcement).count()
 if existing_ann == 0:
     ann_data = [
-        ("🎓 End Semester Examinations – May 2025", "End semester exams will be held from 5th May to 20th May 2025. Students are advised to collect their Hall Tickets from the Examination Office by 28th April.", "Exam", True),
-        ("📅 Mid-Semester Marks Published", "Mid-semester marks for Semester 3 have been published on the student portal. Students with objections may contact their respective faculty within 5 working days.", "Exam", False),
-        ("🏆 National Hackathon – Registration Open", "Smart College is participating in TechFest 2025. Register your teams at the CS Department notice board before 20th March. First prize: ₹50,000!", "Event", True),
-        ("🌟 Campus Recruitment Drive – Infosys", "Infosys will be conducting campus placements on 25th March 2025. Final year students are eligible. Report to the Placement Cell with updated resume.", "Event", False),
-        ("🏖️ Summer Vacation Notice", "College will remain closed from 1st June to 30th June 2025 for summer vacation. Final year project submissions are due before 30th May.", "Holiday", False),
-        ("📚 Library Extended Hours", "The college library will remain open till 9:00 PM on all working days until the end semester examinations. Utilize this time to prepare well!", "General", False),
-        ("⚠️ Fee Payment Deadline", "Last date to pay 2nd installment of tuition fee is 31st March 2025. Late payments will attract a penalty of ₹500 per day. Contact the Accounts Office for queries.", "General", True),
-        ("🔬 Lab Safety Workshop", "A mandatory lab safety and first aid workshop will be conducted for all Science lab users on 22nd March at 10:00 AM in the Seminar Hall.", "Event", False),
-        ("🎁 Cultural Fest – AURORA 2025", "Annual cultural festival AURORA 2025 is scheduled for 10th–12th April. Registrations for events (dance, music, coding) are open. Contact Cultural Committee.", "Event", False),
-        ("📋 Revised Academic Calendar", "The academic calendar for 2025–26 has been revised. Please check the updated schedule on the college website or contact your class teacher for details.", "General", False),
+        ("End Semester Examinations - May 2025", "End semester exams will be held from 5th May to 20th May 2025. Students are advised to collect their Hall Tickets from the Examination Office by 28th April.", "Exam", True),
+        ("Mid-Semester Marks Published", "Mid-semester marks for Semester 3 have been published on the student portal. Students with objections may contact their respective faculty within 5 working days.", "Exam", False),
+        ("National Hackathon - Registration Open", "Smart College is participating in TechFest 2025. Register your teams at the CS Department notice board before 20th March. First prize: 50,000!", "Event", True),
+        ("Campus Recruitment Drive - Infosys", "Infosys will be conducting campus placements on 25th March 2025. Final year students are eligible. Report to the Placement Cell with updated resume.", "Event", False),
+        ("Summer Vacation Notice", "College will remain closed from 1st June to 30th June 2025 for summer vacation. Final year project submissions are due before 30th May.", "Holiday", False),
+        ("Library Extended Hours", "The college library will remain open till 9:00 PM on all working days until the end semester examinations. Utilize this time to prepare well!", "General", False),
+        ("Fee Payment Deadline", "Last date to pay 2nd installment of tuition fee is 31st March 2025. Late payments will attract a penalty of 500 per day. Contact the Accounts Office for queries.", "General", True),
+        ("Lab Safety Workshop", "A mandatory lab safety and first aid workshop will be conducted for all Science lab users on 22nd March at 10:00 AM in the Seminar Hall.", "Event", False),
+        ("Cultural Fest - AURORA 2025", "Annual cultural festival AURORA 2025 is scheduled for 10th-12th April. Registrations for events (dance, music, coding) are open. Contact Cultural Committee.", "Event", False),
+        ("Revised Academic Calendar", "The academic calendar for 2025-26 has been revised. Please check the updated schedule on the college website or contact your class teacher for details.", "General", False),
     ]
     for title, body, category, pinned in ann_data:
         db.add(models.Announcement(title=title, body=body, category=category, is_pinned=pinned, created_by=admin.id))
 db.commit()
-print("  ✅ Announcements created")
+print("   Announcements created")
 
 # ─── 8. TIMETABLE ────────────────────────────────────────────────────────────
 
 existing_tt = db.query(models.Timetable).count()
-if existing_tt == 0:
+if existing_tt < 50:
+    # Clear existing to ensure consistency for this rich seed
+    db.query(models.Timetable).delete()
     tt_data = [
-        # MONDAY
-        ("Computer Science",3,"Monday","08:30 - 09:30","Data Structures & Algorithms","CS301","Lab B1","Dr. Alice Kumar"),
-        ("Computer Science",3,"Monday","09:30 - 10:30","Discrete Mathematics","MA301","Room 204","Prof. Ramesh Sharma"),
-        ("Computer Science",3,"Monday","10:30 - 11:30","Operating Systems","CS302","Room 101","Dr. Priya Nair"),
-        ("Computer Science",3,"Monday","11:30 - 12:30","Database Management Systems","CS303","Room 303","Dr. Alice Kumar"),
-        ("Computer Science",3,"Monday","14:00 - 15:00","Technical Communication","EN301","Room 201","Ms. Anita Joseph"),
-        # TUESDAY
-        ("Computer Science",3,"Tuesday","08:30 - 09:30","Discrete Mathematics","MA301","Room 204","Prof. Ramesh Sharma"),
-        ("Computer Science",3,"Tuesday","09:30 - 11:30","DSA Lab","CS301L","Lab B2","Dr. Alice Kumar"),
-        ("Computer Science",3,"Tuesday","11:30 - 12:30","Operating Systems","CS302","Room 101","Dr. Priya Nair"),
-        ("Computer Science",3,"Tuesday","14:00 - 15:00","Database Management Systems","CS303","Room 303","Dr. Alice Kumar"),
-        ("Computer Science",3,"Tuesday","15:00 - 16:00","Technical Communication","EN301","Room 201","Ms. Anita Joseph"),
-        # WEDNESDAY
-        ("Computer Science",3,"Wednesday","08:30 - 09:30","Data Structures & Algorithms","CS301","Room 101","Dr. Alice Kumar"),
-        ("Computer Science",3,"Wednesday","09:30 - 10:30","Operating Systems","CS302","Room 102","Dr. Priya Nair"),
-        ("Computer Science",3,"Wednesday","10:30 - 12:30","OS Lab","CS302L","Lab A1","Dr. Priya Nair"),
-        ("Computer Science",3,"Wednesday","14:00 - 15:00","Discrete Mathematics","MA301","Room 204","Prof. Ramesh Sharma"),
-        # THURSDAY
-        ("Computer Science",3,"Thursday","08:30 - 09:30","Database Management Systems","CS303","Room 303","Dr. Alice Kumar"),
-        ("Computer Science",3,"Thursday","09:30 - 10:30","Discrete Mathematics","MA301","Room 204","Prof. Ramesh Sharma"),
-        ("Computer Science",3,"Thursday","10:30 - 12:30","DBMS Lab","CS303L","Lab B1","Dr. Alice Kumar"),
-        ("Computer Science",3,"Thursday","14:00 - 15:00","Technical Communication","EN301","Room 201","Ms. Anita Joseph"),
-        ("Computer Science",3,"Thursday","15:00 - 16:00","Operating Systems","CS302","Room 101","Dr. Priya Nair"),
-        # FRIDAY
-        ("Computer Science",3,"Friday","08:30 - 09:30","Data Structures & Algorithms","CS301","Room 101","Dr. Alice Kumar"),
-        ("Computer Science",3,"Friday","09:30 - 10:30","Discrete Mathematics","MA301","Room 204","Prof. Ramesh Sharma"),
-        ("Computer Science",3,"Friday","10:30 - 11:30","Database Management Systems","CS303","Room 303","Dr. Alice Kumar"),
-        ("Computer Science",3,"Friday","11:30 - 12:30","Operating Systems","CS302","Room 102","Dr. Priya Nair"),
-        ("Computer Science",3,"Friday","14:00 - 15:00","Technical Communication","EN301","Room 201","Ms. Anita Joseph"),
-        # SATURDAY
-        ("Computer Science",3,"Saturday","09:00 - 11:00","Project Work / Self Study","--","Project Lab","Respective Guide"),
-        ("Computer Science",3,"Saturday","11:00 - 12:00","Remedial Class / Doubt Session","ALL","Room 101","Faculty"),
+        # COMPUTER SCIENCE - SEM 3
+        ("Computer Science", 3, "Monday", "08:30 - 09:30", "Data Structures & Algorithms", "CS301", "Lab B1", "Dr. Alice Kumar"),
+        ("Computer Science", 3, "Monday", "09:30 - 10:30", "Discrete Mathematics", "MA301", "Room 204", "Prof. Ramesh Sharma"),
+        ("Computer Science", 3, "Tuesday", "10:30 - 11:30", "Operating Systems", "CS302", "Room 101", "Dr. Priya Nair"),
+        
+        # MECHANICAL ENGINEERING - SEM 2
+        ("Mechanical Engineering", 2, "Monday", "09:00 - 10:00", "Thermodynamics", "ME401", "Room 401", "Dr. Michael Johnson"),
+        ("Mechanical Engineering", 2, "Monday", "10:00 - 11:00", "Engineering Graphics", "ME403", "Drawing Hall", "Dr. Michael Johnson"),
+        ("Mechanical Engineering", 2, "Tuesday", "09:00 - 11:00", "Fluid Mechanics Lab", "ME402L", "Workshop A", "Dr. Michael Johnson"),
+        ("Mechanical Engineering", 2, "Wednesday", "11:00 - 12:00", "Thermodynamics", "ME401", "Room 401", "Dr. Michael Johnson"),
+        
+        # ELECTRICAL ENGINEERING - SEM 1
+        ("Electrical Engineering", 1, "Monday", "09:00 - 10:00", "Circuit Theory", "EE201", "Lab E1", "Dr. Sarah Lee"),
+        ("Electrical Engineering", 1, "Monday", "11:00 - 12:00", "Digital Electronics", "EE202", "Room 501", "Dr. Sarah Lee"),
+        ("Electrical Engineering", 1, "Tuesday", "14:00 - 16:00", "Circuit Lab", "EE201L", "Lab E2", "Dr. Sarah Lee"),
+        ("Electrical Engineering", 1, "Thursday", "10:00 - 11:00", "Circuit Theory", "EE201", "Room 501", "Dr. Sarah Lee"),
+
+        # BUSINESS ADMINISTRATION - SEM 1
+        ("Business Administration", 1, "Monday", "10:00 - 11:00", "Marketing Management", "BA101", "Room 105", "Dr. David Smith"),
+        ("Business Administration", 1, "Wednesday", "09:00 - 10:00", "Financial Accounting", "BA102", "Room 105", "Dr. David Smith"),
+        ("Business Administration", 1, "Friday", "11:00 - 12:00", "Business Ethics", "BA103", "Room 105", "Dr. David Smith"),
+        ("Business Administration", 1, "Friday", "14:00 - 15:00", "Marketing Workshop", "BA101W", "Seminar Hall", "Dr. David Smith"),
+
+        # CIVIL ENGINEERING - SEM 3
+        ("Civil Engineering", 3, "Monday", "08:30 - 09:30", "Structural Analysis", "CE301", "Room 302", "Dr. Emma Wilson"),
+        ("Civil Engineering", 3, "Tuesday", "10:00 - 12:00", "Surveying Practical", "CE303P", "Campus Grounds", "Dr. Emma Wilson"),
+        ("Civil Engineering", 3, "Wednesday", "14:00 - 15:00", "Soil Mechanics", "CE302", "Room 302", "Dr. Emma Wilson"),
+        ("Civil Engineering", 3, "Thursday", "11:00 - 12:00", "Structural Analysis", "CE301", "Room 302", "Dr. Emma Wilson"),
+
+        # ADDING MORE FOR EVERYONE...
+        ("Computer Science", 1, "Monday", "09:00 - 10:00", "Programming Fundamentals", "CS101", "Lab B2", "Dr. Alice Kumar"),
+        ("Computer Science", 4, "Wednesday", "10:00 - 12:00", "Cloud Computing", "CS401", "Room 101", "Dr. Priya Nair"),
+        ("Mechanical Engineering", 4, "Friday", "09:00 - 10:00", "Power Plant Engineering", "ME405", "Room 402", "Dr. Michael Johnson"),
+        ("Electrical Engineering", 4, "Monday", "14:00 - 15:00", "Control Systems", "EE401", "Room 502", "Dr. Sarah Lee"),
     ]
+    # Multiply entries with random days to reach "rich" status
+    all_depts = ["Computer Science", "Mechanical Engineering", "Electrical Engineering", "Business Administration", "Civil Engineering"]
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    added_count = len(tt_data)
+    
     for row in tt_data:
         db.add(models.Timetable(department=row[0], semester=row[1], day_of_week=row[2],
                                 time_slot=row[3], subject_name=row[4], subject_code=row[5],
                                 room=row[6], faculty_name=row[7]))
-db.commit()
-print("  ✅ Timetable created (27 entries)")
+    
+    # Generate some filler to make it look "Dense"
+    for dept in all_depts:
+        for sem in [1, 2, 3, 4]:
+            for day in days:
+                if random.random() > 0.4: # 60% chance for a morning class
+                    db.add(models.Timetable(
+                        department=dept, semester=sem, day_of_week=day,
+                        time_slot="09:00 - 10:00", subject_name=f"Core {dept} Subject", 
+                        subject_code=f"{dept[:2].upper()}{sem}0{random.randint(1,9)}",
+                        room=f"Room {random.randint(100,500)}", faculty_name="Assigned Faculty"
+                    ))
+                    added_count += 1
+
+    db.commit()
+    print(f"   Timetable created ({added_count} entries)")
 
 # ─── 9. DOCUMENT FORMS (Dummy PDFs) ──────────────────────────────────────────
 
@@ -206,12 +229,12 @@ if existing_forms == 0:
         )
         db.add(db_form)
     db.commit()
-    print(f"  ✅ Document forms created ({len(forms_meta)} PDFs)")
+    print(f"   Document forms created ({len(forms_meta)} PDFs)")
 else:
-    print(f"  ⏭️  Document forms already exist ({existing_forms})")
+    print(f"   Document forms already exist ({existing_forms})")
 
 db.close()
-print("\n🎉 Seed complete! Login credentials:")
+print("\nSeed complete! Login credentials:")
 print("   Admin   : admin@college.edu / admin123")
 print("   Faculty : alice@college.edu / faculty123")
 print("   Student : john@college.edu  / student123")

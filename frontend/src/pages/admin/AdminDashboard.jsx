@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, FileText, Database, Activity, BarChart3, Bell,
+  Users, FileText, Activity, BarChart3, Bell,
   Trash2, ShieldCheck, GraduationCap, BookOpen, Calendar,
   Upload, MessageSquare, Plus, X, ChevronDown, AlertCircle,
-  TrendingUp, UserCog, Clock, Search
+  TrendingUp, UserCog, Clock, Search, RefreshCw
 } from 'lucide-react';
 import api from '../../services/api';
 import Announcements from '../student/Announcements';
@@ -95,6 +95,7 @@ const AdminDashboard = () => {
   const [faculty, setFaculty] = useState([]);
   const [forms, setForms] = useState([]);
   const [chatLogs, setChatLogs] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -128,12 +129,16 @@ const AdminDashboard = () => {
   const fetchChatLogs = async () => {
     try { const r = await api.get('/admin/chat-logs'); setChatLogs(r.data); } catch (e) { console.error(e); }
   };
+  const fetchAuditLogs = async () => {
+    try { const r = await api.get('/admin/audit-logs'); setAuditLogs(r.data); } catch (e) { console.error(e); }
+  };
   const fetchTimetable = async () => {
     try { const r = await api.get('/admin/timetable'); setTimetable(r.data); } catch (e) { console.error(e); }
   };
 
   useEffect(() => {
     if (activeTab === 'chatlogs') fetchChatLogs();
+    if (activeTab === 'auditlogs') fetchAuditLogs();
     if (activeTab === 'timetable') fetchTimetable();
   }, [activeTab]);
 
@@ -227,8 +232,8 @@ const AdminDashboard = () => {
           <NavItem icon={<Calendar className="h-4 w-4"/>} label="Timetable" tab="timetable" active={activeTab==='timetable'} onClick={setActiveTab} />
           
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-6">AI & Logs</p>
+          <NavItem icon={<Activity className="h-4 w-4"/>} label="Audit Logs" tab="auditlogs" active={activeTab==='auditlogs'} onClick={setActiveTab} />
           <NavItem icon={<MessageSquare className="h-4 w-4"/>} label="Chat Logs" tab="chatlogs" active={activeTab==='chatlogs'} onClick={setActiveTab} badge={stats?.total_chat_queries} />
-          <NavItem icon={<Database className="h-4 w-4"/>} label="Knowledge Base" tab="rag" active={activeTab==='rag'} onClick={setActiveTab} />
         </nav>
       </aside>
 
@@ -236,14 +241,14 @@ const AdminDashboard = () => {
       <main className="flex-1 min-w-0 overflow-auto bg-slate-50">
         <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center gap-4 sticky top-0 z-30 shadow-sm">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-brand-900 capitalize tracking-tight">{activeTab === 'rag' ? 'Knowledge Base' : activeTab === 'chatlogs' ? 'Chat History' : activeTab}</h2>
+            <h2 className="text-xl font-bold text-brand-900 capitalize tracking-tight">{activeTab === 'chatlogs' ? 'Chat History' : activeTab === 'auditlogs' ? 'System Audit Logs' : activeTab}</h2>
             <p className="text-sm text-slate-500 font-medium">EduSphere Admin Operations</p>
           </div>
           {/* Mobile tab selector */}
           <div className="lg:hidden">
             <select className="text-sm border-slate-300 rounded-lg shadow-sm px-3 py-2 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
               value={activeTab} onChange={e => setActiveTab(e.target.value)}>
-              {['overview','users','students','faculty','announcements','forms','timetable','chatlogs','rag'].map(t => (
+              {['overview','users','students','faculty','announcements','forms','timetable','auditlogs','chatlogs'].map(t => (
                 <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>
               ))}
             </select>
@@ -744,40 +749,73 @@ const AdminDashboard = () => {
             </motion.div>
           )}
 
-          {/* ── KNOWLEDGE BASE ─────────────────────────────────────────────── */}
-          {activeTab === 'rag' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} >
-              <div className="formal-card p-8 max-w-3xl">
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 bg-slate-100 border border-slate-200 rounded-lg"><Database className="h-6 w-6 text-slate-700"/></div>
-                    <div>
-                    <h3 className="font-bold text-brand-900 text-xl tracking-tight">AI Knowledge Base System</h3>
-                    <p className="text-sm text-slate-500 mt-1 font-medium">Manage vector embeddings and search configuration.</p>
+          {/* ── AUDIT LOGS ─────────────────────────────────────────────────── */}
+          {activeTab === 'auditlogs' && (
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <div className="flex items-center gap-4">
+                  <h3 className="font-bold text-brand-900 text-lg">System Audit Logs ({auditLogs.length})</h3>
+                  <button 
+                    onClick={fetchAuditLogs}
+                    className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-all border border-transparent hover:border-brand-100"
+                    title="Refresh Logs"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
+                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search logs…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
+                </div>
+              </div>
+
+              <div className="formal-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Admin','Action','Target','Time'].map(h=>(
+                          <th key={h} className="px-5 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {filtered(auditLogs, ['admin_email', 'action', 'target']).map(log=>(
+                        <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-4">
+                            <span className="text-xs font-bold text-brand-900">{log.admin_email}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border tracking-tight ${
+                                log.action.toLowerCase().includes('delete') || log.action.toLowerCase().includes('ban') || log.action.toLowerCase().includes('remove') ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                                log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('add') || log.action.toLowerCase().includes('approve') || log.action.toLowerCase().includes('upload') ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                log.action.toLowerCase().includes('system') || log.action.toLowerCase().includes('initial') ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                'bg-amber-50 text-amber-700 border-amber-100'
+                            }`}>
+                                {log.action}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-xs font-medium text-slate-600">{log.target}</span>
+                          </td>
+                          <td className="px-5 py-4 text-xs text-slate-500">
+                            {fmtTime(log.timestamp)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {auditLogs.length === 0 && (
+                    <div className="text-center py-16 text-slate-400 font-medium text-sm">
+                      <Activity className="h-10 w-10 mx-auto text-slate-300 mb-3"/>
+                      <p>No audit history available.</p>
                     </div>
-                </div>
-                <div className="border border-slate-200 bg-slate-50 rounded-xl p-10 text-center">
-                    <Database className="h-10 w-10 text-slate-400 mx-auto mb-3"/>
-                    <p className="font-bold text-slate-700 mb-2">Vector DB Ingestion</p>
-                    <p className="text-sm text-slate-500 mb-6 font-medium max-w-md mx-auto">Upload institutional data directly into the ChromaDB vector database. This will build the context for the AI query system.</p>
-                    <button disabled className="btn-primary opacity-50 cursor-not-allowed">
-                        Initialize Ingestion Pipeline
-                    </button>
-                    <p className="text-xs text-slate-400 font-medium mt-3">Maintenance mode active.</p>
-                </div>
-                
-                <div className="mt-8">
-                  <h4 className="font-bold text-brand-900 text-sm tracking-wider uppercase mb-4">System Architecture</h4>
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-3 text-sm text-slate-600 font-medium">
-                      <div className="flex gap-3"><span className="font-bold text-slate-400">01</span><p>Documents monitored in <code className="bg-slate-100 px-1 border border-slate-200 rounded">data/uploads/</code></p></div>
-                      <div className="flex gap-3"><span className="font-bold text-slate-400">02</span><p>PyPDFLoader triggers automated text extraction</p></div>
-                      <div className="flex gap-3"><span className="font-bold text-slate-400">03</span><p>HuggingFace Model generates vector embeddings</p></div>
-                      <div className="flex gap-3"><span className="font-bold text-slate-400">04</span><p>Embeddings persisted to ChromaDB storage</p></div>
-                      <div className="flex gap-3"><span className="font-bold text-slate-400">05</span><p>LLM routes RAG queries through retriever context</p></div>
-                  </div>
+                  )}
                 </div>
               </div>
             </motion.div>
           )}
+
 
         </div>
       </main>
