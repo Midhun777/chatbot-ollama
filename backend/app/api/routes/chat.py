@@ -139,8 +139,17 @@ def handle_chat_query(
             else:
                 ans = f"Hello {student.first_name}, I routed you to your personal profile. Your enrollment number is {student.enrollment_no}."
                 chat_resp = ChatResponse(answer=ans, source="DATABASE")
-
-    # 3. Path B: RAG Query for Knowledge/Syllabus
+    
+    # 2.5 Path: Greetings (Skip RAG for simple chitchat)
+    if not chat_resp and query_intent == "GREETING":
+        greetings = [
+            "Hello! How can I help you today?",
+            "Hey there! Need help with your courses or timetable?",
+            "Hi! I'm your EduSphere AI Assistant. What can I do for you?",
+            "Good day! How can I assist you with your academic queries?"
+        ]
+        import random
+        chat_resp = ChatResponse(answer=random.choice(greetings), source="GREETINGS")
     if not chat_resp:
         try:
             # Let Langchain process this through Chroma & local Ollama model

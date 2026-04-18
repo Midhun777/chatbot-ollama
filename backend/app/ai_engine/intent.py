@@ -11,7 +11,12 @@ def classify_intent(question: str) -> str:
     """
     question_lower = question.lower()
 
-    # Keywords strictly related to database structured records
+    # 1. Greetings and chitchat
+    greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "namaste", "hola"]
+    if any(question_lower == g or question_lower.startswith(g + " ") for g in greetings):
+        return "GREETING"
+
+    # 2. Personal keywords
     personal_keywords = [
         "my marks", "my attendance", "my fee", "my grade", "my cgpa", 
         "i got in", "how much did i score", "am i present", "my profile",
@@ -22,5 +27,5 @@ def classify_intent(question: str) -> str:
         if kw in question_lower:
             return "PERSONAL"
 
-    # Default to RAG for general knowledge queries
+    # 3. Default to RAG for general knowledge queries
     return "KNOWLEDGE"
