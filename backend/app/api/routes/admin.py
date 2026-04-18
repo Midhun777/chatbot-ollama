@@ -358,6 +358,18 @@ def get_audit_logs(
         })
     return result
 
+# ─── RAG INGESTION ──────────────────────────────────────────────────────────
+
+@router.post("/rag/ingest")
+def trigger_rag_ingestion(
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_active_admin)
+):
+    from app.ai_engine.ingest import ingest_all_knowledge
+    try:
+        chunks = ingest_all_knowledge()
+        log_system_activity(db, admin_user.id, "System Initialization", f"RAG Ingestion: {chunks} chunks")
+        return {"message": "Ingestion complete", "chunks_processed": chunks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
