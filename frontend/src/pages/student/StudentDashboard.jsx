@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Calendar, TrendingUp, Send, Bot, User as UserIcon, Award, Percent, Bell, Sparkles, Edit, FileDown } from 'lucide-react';
+import { BookOpen, Calendar, Send, Bot, User as UserIcon, Bell, Sparkles, Edit, FileDown, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 
@@ -13,7 +13,7 @@ const StudentDashboard = () => {
 
     // Chat State
     const [messages, setMessages] = useState([
-        { text: "Hello! I am your EduSphere AI Assistant. Ask me about your attendance, marks, or anything in the college syllabus.", sender: "ai" }
+        { text: "Hello! I am your EduSphere AI Assistant. Ask me about the syllabus, campus rules, or any institutional documents.", sender: "ai" }
     ]);
     const [inputMessage, setInputMessage] = useState('');
     const [isChatLoading, setIsChatLoading] = useState(false);
@@ -53,8 +53,6 @@ const StudentDashboard = () => {
                 name: "Student",
                 enrollment_no: "Loading...",
                 semester: "-",
-                attendance_pct: 0,
-                cgpa: 0
             });
         } finally {
             setIsLoading(false);
@@ -81,160 +79,138 @@ const StudentDashboard = () => {
         }
     };
 
-    const CATEGORY_DOT = { General: 'bg-slate-400', Exam: 'bg-red-500', Event: 'bg-blue-500', Holiday: 'bg-emerald-500' };
+    const CATEGORY_DOT = { General: 'bg-slate-400', Exam: 'bg-red-500', Event: 'bg-brand-primary', Holiday: 'bg-emerald-500' };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col lg:flex-row gap-10"
+                className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-8rem)]" // Fill height minus navbar and padding
             >
-                {/* Left Column */}
-                <div className="w-full lg:w-1/3 flex flex-col gap-6">
+                {/* Left Column - Profile & Quick Actions */}
+                <div className="w-full lg:w-80 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
 
                     {/* Profile Card */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="glass-card rounded-[2.5rem] p-8 relative group border border-white/40"
-                    >
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors" />
-
-                        <div className="flex items-center gap-4 mb-8 relative z-10">
-                            <div className="h-16 w-16 gradient-bg rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100 flex-shrink-0">
-                                <UserIcon className="h-8 w-8" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h2 className="text-xl font-black text-slate-900 leading-tight truncate">{profile?.name || "Student"}</h2>
-                                <p className="text-slate-500 font-bold tracking-tight text-sm">{profile?.enrollment_no || "Loading..."}</p>
-                                {profile?.department && (
-                                    <p className="text-xs text-indigo-600 font-bold mt-0.5">{profile.department}</p>
-                                )}
+                    <div className="formal-card p-6 border-t-4 border-t-brand-primary">
+                        <div className="flex items-start justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center text-brand-900 border border-slate-200 flex-shrink-0">
+                                    <UserIcon className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-heading font-bold text-brand-900 leading-tight truncate">{profile?.name || "Student"}</h2>
+                                    <p className="text-slate-500 font-medium text-sm">{profile?.enrollment_no || "Loading..."}</p>
+                                </div>
                             </div>
                             <button
                                 onClick={() => navigate('/student/profile')}
-                                className="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                className="p-1.5 rounded-md text-slate-400 hover:bg-slate-50 hover:text-brand-primary transition-colors border border-transparent hover:border-slate-200"
                                 title="Edit Profile"
                             >
                                 <Edit className="h-4 w-4" />
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3 relative z-10">
-                            <StatBadge
-                                icon={<Calendar className="h-4 w-4" />}
-                                label="Semester"
-                                value={profile?.semester || "-"}
-                                color="bg-blue-50 text-blue-600"
-                            />
-                            <StatBadge
-                                icon={<Percent className="h-4 w-4" />}
-                                label="Attendance"
-                                value={`${profile?.attendance_pct || 0}%`}
-                                color="bg-emerald-50 text-emerald-600"
-                                trend={profile?.attendance_pct >= 75 ? "✓ On Track" : "⚠ Low"}
-                            />
-                            <StatBadge
-                                icon={<Award className="h-4 w-4" />}
-                                label="CGPA"
-                                value={profile?.cgpa || "-"}
-                                color="bg-purple-50 text-purple-600"
-                            />
-                        </div>
-                    </motion.div>
+                        {profile?.department && (
+                            <div className="bg-brand-50 px-3 py-1.5 rounded-md inline-block mb-6">
+                                <p className="text-xs text-brand-700 font-semibold uppercase tracking-wider">{profile.department}</p>
+                            </div>
+                        )}
 
-                    {/* Quick Nav Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <QuickLink icon={<Calendar className="h-5 w-5" />} title="Timetable" subtitle="Class Schedule" onClick={() => navigate('/student/timetable')} delay={0.2} color="from-blue-500 to-indigo-500" />
-                        <QuickLink icon={<Bell className="h-5 w-5" />} title="Notices" subtitle="Announcements" onClick={() => navigate('/student/announcements')} delay={0.25} color="from-amber-500 to-orange-500" />
-                        <QuickLink icon={<Sparkles className="h-5 w-5" />} title="AI Roadmap" subtitle="Study Planner" onClick={() => navigate('/student/roadmap')} delay={0.3} color="from-violet-500 to-purple-500" />
-                        <QuickLink icon={<TrendingUp className="h-5 w-5" />} title="Performance" subtitle="Marks & CGPA" onClick={() => navigate('/student/performance')} delay={0.35} color="from-emerald-500 to-teal-500" />
+                        <div className="space-y-3">
+                            <StatRow icon={<Calendar className="h-4 w-4" />} label="Semester" value={profile?.semester || "-"} />
+                        </div>
                     </div>
 
-                    {/* Recent Announcements preview */}
+                    {/* Navigation Links (List instead of grid for formal look) */}
+                    <div className="formal-card overflow-visible">
+                        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quick Actions</h3>
+                        </div>
+                        <div className="p-2 space-y-1">
+                            <NavAction icon={<Calendar className="h-4 w-4" />} label="Timetable" onClick={() => navigate('/student/timetable')} />
+                            <NavAction icon={<Bell className="h-4 w-4" />} label="Notices" onClick={() => navigate('/student/announcements')} />
+                            <NavAction icon={<MessageSquare className="h-4 w-4 text-emerald-600" />} label="Live Chat with Faculty" onClick={() => navigate('/student/messages')} />
+                        </div>
+                    </div>
+
+                    {/* Recent Announcements */}
                     {announcements.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest">Latest Notices</h3>
-                                <button onClick={() => navigate('/student/announcements')} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">View all →</button>
+                        <div className="formal-card">
+                            <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recent Notices</h3>
+                                <button onClick={() => navigate('/student/announcements')} className="text-xs font-semibold text-brand-primary hover:underline">View All</button>
                             </div>
-                            <div className="space-y-3">
+                            <div className="p-4 space-y-4">
                                 {announcements.map(ann => (
-                                    <div key={ann.id} className="flex items-start gap-3">
-                                        <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${CATEGORY_DOT[ann.category] || 'bg-slate-400'}`} />
+                                    <div key={ann.id} className="flex gap-3">
+                                        <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${CATEGORY_DOT[ann.category] || 'bg-slate-400'}`} />
                                         <div>
-                                            <p className="text-sm font-bold text-slate-800 leading-tight">{ann.title}</p>
-                                            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{ann.body}</p>
+                                            <p className="text-sm font-semibold text-brand-900 leading-tight mb-1">{ann.title}</p>
+                                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{ann.body}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </motion.div>
+                        </div>
                     )}
                 </div>
 
-                {/* Right Column: AI Chatbot */}
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex-1 flex flex-col bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.05)] border border-slate-100 overflow-hidden"
-                >
-                    <div className="gradient-bg p-6 flex items-center justify-between shadow-lg relative z-10">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
-                                <Bot className="h-7 w-7 text-white" />
+                {/* Right Column: AI Chatbot (Main Focus) */}
+                <div className="flex-1 flex flex-col formal-card min-h-[500px]">
+                    {/* Chat Header */}
+                    <div className="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-brand-50 p-2 rounded-lg">
+                                <Bot className="h-5 w-5 text-brand-primary" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-white">EduSphere AI</h2>
-                                <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                    <p className="text-xs text-indigo-100 font-bold uppercase tracking-wider">Online & Private</p>
-                                </div>
+                                <h2 className="text-sm font-bold text-brand-900 leading-tight">EduSphere AI Assistant</h2>
+                                <p className="text-xs text-slate-500 font-medium">Secure Institutional Search</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Chat Messages */}
-                    <div className="flex-1 p-8 overflow-y-auto bg-slate-50/50 space-y-6 custom-scrollbar">
+                    <div className="flex-1 p-6 overflow-y-auto bg-slate-50 space-y-6">
                         <AnimatePresence>
                             {messages.map((msg, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
                                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`max-w-[75%] rounded-3xl px-6 py-4 relative shadow-sm ${msg.sender === 'user'
-                                            ? 'gradient-bg text-white rounded-tr-none'
-                                            : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none premium-shadow'
-                                        }`}>
+                                    <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm border ${
+                                            msg.sender === 'user'
+                                            ? 'bg-brand-900 text-white rounded-br-sm border-brand-900'
+                                            : 'bg-white text-slate-700 rounded-bl-sm border-slate-200'
+                                        }`}
+                                    >
                                         <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                        
                                         {msg.form && (
                                             <a
                                                 href={msg.form.download_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="mt-4 flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl px-5 py-3 shadow-lg hover:shadow-xl hover:brightness-110 transition-all group no-underline"
+                                                className="mt-4 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 hover:bg-slate-100 transition-colors group no-underline text-brand-900"
                                             >
-                                                <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                                                    <FileDown className="h-5 w-5" />
+                                                <div className="bg-white p-2 rounded-md border border-slate-200 text-slate-500 group-hover:text-brand-primary transition-colors">
+                                                    <FileDown className="h-4 w-4" />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-black uppercase tracking-wider opacity-80">Download PDF</span>
-                                                    <span className="text-sm font-bold">{msg.form.form_title}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Document</span>
+                                                    <span className="text-sm font-semibold">{msg.form.form_title}</span>
                                                 </div>
                                             </a>
                                         )}
+                                        
                                         {msg.source && (
-                                            <div className={`mt-3 pt-2 border-t text-[10px] font-black uppercase tracking-widest ${msg.sender === 'user' ? 'border-white/20 text-indigo-100' : 'border-slate-50 text-slate-400'}`}>
+                                            <div className={`mt-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                                <div className="h-1 w-1 rounded-full bg-current opacity-50" />
                                                 Source: {msg.source}
                                             </div>
                                         )}
@@ -245,71 +221,69 @@ const StudentDashboard = () => {
 
                         {isChatLoading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                                <div className="bg-white border border-slate-100 rounded-2xl px-6 py-4 shadow-sm flex gap-1.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: '0.2s' }} />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: '0.4s' }} />
+                                <div className="bg-white border border-slate-200 rounded-2xl px-5 py-4 rounded-bl-sm shadow-sm flex items-center gap-1.5 h-12">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.2s' }} />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.4s' }} />
                                 </div>
                             </motion.div>
                         )}
                         <div ref={chatEndRef} />
                     </div>
 
-                    {/* Input */}
-                    <div className="p-8 bg-white border-t border-slate-50">
-                        <form onSubmit={handleSendMessage} className="relative group">
+                    {/* Chat Input */}
+                    <div className="p-4 bg-white border-t border-slate-200">
+                        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
                             <input
                                 type="text"
                                 value={inputMessage}
                                 onChange={(e) => setInputMessage(e.target.value)}
-                                placeholder="What can I help you with today?"
-                                className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white rounded-[1.5rem] pl-6 pr-20 py-5 text-sm font-bold text-slate-800 focus:outline-none transition-all shadow-inner"
+                                placeholder="Message EduSphere AI..."
+                                className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary rounded-lg pl-4 pr-12 py-3.5 text-sm font-medium text-slate-900 focus:outline-none transition-all"
                                 disabled={isChatLoading}
                             />
                             <button
                                 type="submit"
                                 disabled={isChatLoading || !inputMessage.trim()}
-                                className="absolute right-3 top-2 bottom-2 gradient-bg text-white rounded-2xl px-5 hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center shadow-lg shadow-indigo-100"
+                                className="absolute right-3 p-1.5 bg-brand-primary text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:bg-slate-300 flex items-center justify-center"
                             >
-                                <Send className="h-5 w-5" />
+                                <Send className="h-4 w-4" />
                             </button>
                         </form>
+                        <p className="text-center text-[10px] text-slate-400 mt-2 font-medium">AI can make mistakes. Verify important academic information with official bodies.</p>
                     </div>
-                </motion.div>
+                </div>
             </motion.div>
         </div>
     );
 };
 
-const StatBadge = ({ icon, label, value, color, trend }) => (
-    <div className={`flex items-center justify-between p-4 rounded-2xl ${color} bg-opacity-40 border border-white/50 backdrop-blur-sm`}>
-        <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-white shadow-sm">{icon}</div>
-            <span className="text-xs font-black uppercase tracking-widest opacity-80">{label}</span>
+const StatRow = ({ icon, label, value, status }) => (
+    <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+        <div className="flex items-center gap-2 text-slate-600">
+            {icon}
+            <span className="text-sm font-medium">{label}</span>
         </div>
-        <div className="flex flex-col items-end">
-            <span className="text-lg font-black tracking-tight">{value}</span>
-            {trend && <span className="text-[10px] font-black uppercase tracking-tighter opacity-60">{trend}</span>}
+        <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-brand-900">{value}</span>
+            {status === 'good' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+            {status === 'warning' && <div className="w-2 h-2 rounded-full bg-amber-500" />}
         </div>
     </div>
 );
 
-const QuickLink = ({ icon, title, subtitle, onClick, delay, color }) => (
-    <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
+const NavAction = ({ icon, label, onClick }) => (
+    <button
         onClick={onClick}
-        className="flex flex-col items-center gap-3 p-5 bg-white border border-slate-100 rounded-[1.5rem] hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 transition-all text-center group"
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-left group"
     >
-        <div className={`p-3 rounded-2xl bg-gradient-to-br ${color} group-hover:scale-110 transition-transform shadow-lg`}>
-            <span className="text-white">{icon}</span>
+        <div className="text-slate-400 group-hover:text-brand-primary transition-colors">
+            {icon}
         </div>
-        <div>
-            <h4 className="font-black text-slate-900 leading-none text-sm mb-0.5">{title}</h4>
-            <p className="text-[10px] font-bold text-slate-400 group-hover:text-indigo-400 transition-colors uppercase tracking-widest">{subtitle}</p>
-        </div>
-    </motion.button>
+        <span className="text-sm font-semibold text-slate-700 group-hover:text-brand-900 transition-colors">
+            {label}
+        </span>
+    </button>
 );
 
 export default StudentDashboard;

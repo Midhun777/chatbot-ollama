@@ -16,10 +16,14 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
     role = Column(String, default=UserRole.STUDENT)
+    status = Column(String, default="active") # active, pending, banned
     created_at = Column(DateTime, default=datetime.utcnow)
 
     student_profile = relationship("Student", back_populates="user", uselist=False)
     faculty_profile = relationship("Faculty", back_populates="user", uselist=False)
+    
+    sent_messages = relationship("DirectMessage", back_populates="sender", foreign_keys="[DirectMessage.sender_id]")
+    received_messages = relationship("DirectMessage", back_populates="receiver", foreign_keys="[DirectMessage.receiver_id]")
 
 class Student(Base):
     __tablename__ = "students"
@@ -32,12 +36,9 @@ class Student(Base):
     department = Column(String)
     current_semester = Column(Integer)
     phone = Column(String)
-    cgpa = Column(Float, default=0.0)
     profile_bio = Column(String, default="")
 
     user = relationship("User", back_populates="student_profile")
-    attendances = relationship("Attendance", back_populates="student")
-    marks = relationship("Mark", back_populates="student")
 
 class Faculty(Base):
     __tablename__ = "faculty"
@@ -64,33 +65,7 @@ class Course(Base):
     faculty_id = Column(Integer, ForeignKey("faculty.id"))
 
     faculty = relationship("Faculty", back_populates="courses")
-    attendances = relationship("Attendance", back_populates="course")
-    marks = relationship("Mark", back_populates="course")
 
-class Attendance(Base):
-    __tablename__ = "attendance"
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"))
-    course_id = Column(Integer, ForeignKey("courses.id"))
-    date = Column(DateTime)
-    status = Column(String) # Present/Absent
-
-    student = relationship("Student", back_populates="attendances")
-    course = relationship("Course", back_populates="attendances")
-
-class Mark(Base):
-    __tablename__ = "marks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"))
-    course_id = Column(Integer, ForeignKey("courses.id"))
-    exam_type = Column(String) # Mid-Sem, Final, Internal
-    marks_obtained = Column(Float)
-    total_marks = Column(Float)
-
-    student = relationship("Student", back_populates="marks")
-    course = relationship("Course", back_populates="marks")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
@@ -144,3 +119,16 @@ class Timetable(Base):
     room = Column(String)
     faculty_name = Column(String)
 
+
+class DirectMessage(Base):
+    __tablename__ = "direct_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    content = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    is_read = Column(Boolean, default=False)
+
+    sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
+    receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")

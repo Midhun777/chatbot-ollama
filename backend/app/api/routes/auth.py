@@ -25,32 +25,44 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         new_user = models.User(
             email=user.email,
             password_hash=hashed_password,
-            role="student" # Defaulting all new registrations to student
+            role=user.role if user.role in ["student", "faculty"] else "student",
+            status="pending" if user.role == "faculty" else "active"
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
         print(f"DEBUG: User {new_user.id} created")
 
-        # Create student profile by default with placeholder values
-        import uuid # Needed for placeholder enrollment_no
-        student_profile = models.Student(
-            user_id=new_user.id,
-            enrollment_no=f"STU-{uuid.uuid4().hex[:6].upper()}", # Auto-generate placeholder 
-            first_name=user.first_name,
-            last_name=user.last_name,
-            department="Undeclared", # Default department
-            current_semester=1,
-            phone=""
-        )
-        db.add(student_profile)
+        if new_user.role == "student":
+            import uuid
+            student_profile = models.Student(
+                user_id=new_user.id,
+                enrollment_no=f"STU-{uuid.uuid4().hex[:6].upper()}",
+                first_name=user.first_name,
+                last_name=user.last_name,
+                department="Undeclared",
+                current_semester=1,
+                phone=""
+            )
+            db.add(student_profile)
+        elif new_user.role == "faculty":
+            import uuid
+            faculty_profile = models.Faculty(
+                user_id=new_user.id,
+                employee_id=f"FAC-{uuid.uuid4().hex[:6].upper()}",
+                first_name=user.first_name,
+                last_name=user.last_name,
+                department="Undeclared",
+                designation="Assistant Professor"
+            )
+            db.add(faculty_profile)
         
         db.commit()
         print("DEBUG: Profile created successfully")
         
         access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": str(new_user.id), "role": new_user.role}, expires_delta=access_token_expires
+            data={"sub": str(new_user.id), "role": new_user.role, "status": new_user.status}, expires_delta=access_token_expires
         )
         return {"access_token": access_token, "token_type": "bearer"}
     except Exception as e:
@@ -67,8 +79,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.status == "banned":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been banned. Please contact administration."
+        )
+
     access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.id), "role": user.role}, expires_delta=access_token_expires
+        data={"sub": str(user.id), "role": user.role, "status": user.status}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}

@@ -25,6 +25,17 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+def get_current_user_optional(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """Attempt to get current user, but return None if not authenticated."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        return db.query(models.User).filter(models.User.id == int(user_id)).first()
+    except:
+        return None
+
 def get_current_active_admin(current_user: models.User = Depends(get_current_user)):
     if current_user.role != models.UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Not enough privileges")

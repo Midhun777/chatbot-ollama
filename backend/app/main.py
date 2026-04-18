@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from .database.connection import engine, Base
-from .api.routes import auth, admin, student, faculty, chat, announcements, timetable, roadmap
+from .api.routes import auth, admin, student, faculty, chat, announcements, timetable, messages
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -47,7 +47,7 @@ app.include_router(faculty.router, prefix="/api/faculty", tags=["Faculty"])
 app.include_router(chat.router, prefix="/api/chat", tags=["AI Chatbot System"])
 app.include_router(announcements.router, prefix="/api/announcements", tags=["Announcements"])
 app.include_router(timetable.router, prefix="/api/timetable", tags=["Timetable"])
-app.include_router(roadmap.router, prefix="/api/roadmap", tags=["AI Roadmap"])
+app.include_router(messages.router, prefix="/api/messages", tags=["Live Messaging"])
 
 @app.get("/")
 def read_root():

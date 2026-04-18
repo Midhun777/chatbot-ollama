@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { GraduationCap, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { BookOpen, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -13,7 +13,6 @@ const Login = () => {
     const { login, user } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Redirect if already logged in — must be in useEffect to avoid render-phase crash
     useEffect(() => {
         if (user) navigate(`/${user.role}/dashboard`);
     }, [user, navigate]);
@@ -37,130 +36,106 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-slate-50">
-            {/* Background elements */}
-            <div className="absolute top-0 -left-20 w-96 h-96 bg-indigo-200 rounded-full blur-[120px] opacity-30 animate-float"></div>
-            <div className="absolute bottom-0 -right-20 w-80 h-80 bg-purple-200 rounded-full blur-[120px] opacity-30 animate-float" style={{ animationDelay: '2s' }}></div>
-
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <motion.div 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-md w-full relative z-10"
+                transition={{ duration: 0.3 }}
+                className="max-w-md w-full space-y-8"
             >
-                <div className="text-center mb-10">
-                    <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="inline-flex gradient-bg p-4 rounded-3xl shadow-2xl shadow-indigo-200 mb-6"
-                    >
-                        <GraduationCap className="h-10 w-10 text-white" />
-                    </motion.div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                        Welcome <span className="gradient-text">Back</span>
+                <div className="text-center">
+                    <div className="mx-auto h-12 w-12 bg-brand-900 rounded-lg flex items-center justify-center shadow-sm">
+                        <BookOpen className="h-6 w-6 text-white" />
+                    </div>
+                    <h2 className="mt-6 text-3xl font-heading font-bold text-brand-900 tracking-tight">
+                        Sign in to your account
                     </h2>
-                    <p className="mt-3 text-slate-500 font-bold">
-                        Securely sign in to your EduSphere Portal
+                    <p className="mt-2 text-sm text-slate-600 font-medium">
+                        Welcome back to EduSphere
                     </p>
                 </div>
 
-                <div className="glass-card p-10 rounded-[2.5rem] border border-white/50 premium-shadow">
+                <div className="formal-card p-8 sm:p-10 text-left">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         {error && (
-                            <motion.div 
-                                initial={{ opacity: 0, x: -10 }} 
-                                animate={{ opacity: 1, x: 0 }}
-                                className="bg-red-50/50 backdrop-blur-sm border border-red-100 p-4 rounded-2xl flex items-center gap-3 text-red-600"
-                            >
-                                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                                <p className="text-xs font-black uppercase tracking-wider">{error}</p>
-                            </motion.div>
+                            <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                <p className="text-sm text-red-700 font-medium">{error}</p>
+                            </div>
                         )}
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none group-focus-within:text-indigo-600 transition-colors">
-                                    <Mail className="h-5 w-5 text-slate-300" />
+                        <div>
+                            <label className="block text-sm font-semibold text-brand-900 mb-1.5">Email address</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-slate-400" />
                                 </div>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white rounded-2xl text-sm font-bold text-slate-800 focus:outline-none transition-all"
-                                    placeholder="alex@college.edu"
+                                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-slate-50 focus:bg-white transition-colors"
+                                    placeholder="Enter your email"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Secure Password</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none group-focus-within:text-indigo-600 transition-colors">
-                                    <Lock className="h-5 w-5 text-slate-300" />
+                        <div>
+                            <label className="block text-sm font-semibold text-brand-900 mb-1.5">Password</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-slate-400" />
                                 </div>
                                 <input
                                     type="password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white rounded-2xl text-sm font-bold text-slate-800 focus:outline-none transition-all"
+                                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-slate-50 focus:bg-white transition-colors"
                                     placeholder="••••••••"
                                 />
                             </div>
                         </div>
 
-                        <div className="pt-2">
+                        <div>
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full h-14 gradient-bg text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
+                                className="w-full btn-primary py-3"
                             >
                                 {isLoading ? (
-                                    <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        Sign In to Portal
-                                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                        Sign In
+                                        <ArrowRight className="ml-2 h-4 w-4" />
                                     </>
                                 )}
                             </button>
                         </div>
-
-                        <div className="text-center mt-6 space-y-4">
-                            <div>
-                                <span className="text-sm font-bold text-slate-400">
-                                    Need an account?{' '}
-                                    <Link to="/register" className="text-indigo-600 hover:text-indigo-800 transition-colors">
-                                        Get started
-                                    </Link>
-                                </span>
-                            </div>
-                            
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-slate-200"></div>
-                                <span className="flex-shrink-0 mx-4 text-xs font-black text-slate-300 uppercase tracking-widest">or</span>
-                                <div className="flex-grow border-t border-slate-200"></div>
-                            </div>
-                            
-                            <Link 
-                                to="/guest/dashboard"
-                                className="block w-full h-12 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center"
-                            >
-                                Continue as Guest
-                            </Link>
-                        </div>
                     </form>
-                </div>
 
-                <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-center mt-8 text-xs font-black text-slate-300 uppercase tracking-[0.2em]"
-                >
-                    &copy; 2026 EduSphere Inc.
-                </motion.p>
+                    <div className="mt-8 text-center border-t border-slate-200 pt-6">
+                        <p className="text-sm text-slate-600 mb-4">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="font-semibold text-brand-primary hover:text-blue-800 transition-colors">
+                                Apply now
+                            </Link>
+                        </p>
+                        
+                        <Link 
+                            to="/guest/dashboard"
+                            className="text-sm font-medium text-slate-500 hover:text-brand-900 transition-colors"
+                        >
+                            Continue as Guest &rarr;
+                        </Link>
+                    </div>
+                </div>
+                
+                <p className="text-center text-xs text-slate-500 font-medium">
+                    &copy; 2026 EduSphere Institutional Portal. All rights reserved.
+                </p>
             </motion.div>
         </div>
     );

@@ -1,22 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { CalendarCheck, FileSpreadsheet, Users, BookOpen, Clock, Bell, Upload, Plus, Trash2, X } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Bell, Clock, Plus, Trash2, Upload, MessageSquare, Users, X, ShieldCheck, AlertCircle, Info, Lock } from 'lucide-react';
 import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 import Announcements from '../student/Announcements';
+import Messages from '../public/Messages';
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
     <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
+      initial={{ scale: 0.98, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 z-10 max-h-[90vh] overflow-y-auto"
+      className="relative bg-white rounded-xl shadow-formal w-full max-w-lg p-6 z-10 max-h-[90vh] overflow-y-auto"
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-black text-slate-900">{title}</h2>
-        <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
-          <X className="h-5 w-5 text-slate-500" />
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+        <h2 className="text-lg font-bold text-brand-900">{title}</h2>
+        <button onClick={onClose} className="p-1.5 rounded-md hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600">
+          <X className="h-5 w-5" />
         </button>
       </div>
       {children}
@@ -25,19 +27,14 @@ const Modal = ({ title, onClose, children }) => (
 );
 
 const FacultyDashboard = () => {
-    const [activeTab, setActiveTab] = useState('attendance');
+    const { user } = useContext(AuthContext);
+    const isPending = user?.status === 'pending';
+    
+    const [activeTab, setActiveTab] = useState(isPending ? 'announcements' : 'materials');
     const [courses, setCourses] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [students, setStudents] = useState([]);
     
-    // Attendance specific
-    const [attDate, setAttDate] = useState(new Date().toISOString().split('T')[0]);
-    
-    // Marks specific
-    const [examType, setExamType] = useState('Mid-Semester');
-    const [totalMarks, setTotalMarks] = useState(100);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadMsg, setUploadMsg] = useState('');
 
     // Timetable
     const [timetable, setTimetable] = useState([]);
@@ -100,35 +97,6 @@ const FacultyDashboard = () => {
         try { const r = await api.get('/admin/forms'); setMaterials(r.data); } catch (e) { console.error(e); }
     };
 
-    const handleAttendanceSubmit = async (studentId, status) => {
-        try {
-            await api.post('/faculty/attendance', {
-                student_id: studentId,
-                course_id: parseInt(selectedCourseId),
-                date: attDate,
-                status: status
-            });
-            alert('Attendance saved successfully');
-        } catch (e) {
-            alert('Failed to save attendance');
-        }
-    };
-
-    const handleMarkSubmit = async (studentId, marks) => {
-        if (marks === '') return alert('Enter marks before saving');
-        try {
-            await api.post('/faculty/marks', {
-                student_id: studentId,
-                course_id: parseInt(selectedCourseId),
-                exam_type: examType,
-                marks_obtained: parseFloat(marks),
-                total_marks: parseFloat(totalMarks)
-            });
-            alert('Marks saved successfully');
-        } catch (e) {
-            alert('Failed to save marks');
-        }
-    };
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
@@ -174,41 +142,48 @@ const FacultyDashboard = () => {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-black text-slate-900">Faculty Portal</h1>
-                <p className="text-sm font-medium text-slate-500 mt-1">Manage your assigned courses, students, timetable, and announcements.</p>
+                <h1 className="text-2xl font-bold text-brand-900 tracking-tight">Faculty Dashboard</h1>
+                <p className="text-sm font-medium text-slate-500 mt-1">Manage courses, students, timetable, and announcements.</p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col md:flex-row gap-6">
                 {/* Sidebar Nav */}
-                <div className="w-full md:w-64 flex flex-col gap-2">
-                    {[
-                        { id: 'attendance', label: 'Mark Attendance', icon: <CalendarCheck className="h-5 w-5" /> },
-                        { id: 'marks', label: 'Upload Marks', icon: <FileSpreadsheet className="h-5 w-5" /> },
-                        { id: 'materials', label: 'Course Materials', icon: <BookOpen className="h-5 w-5" /> },
-                        { id: 'timetable', label: 'Timetable', icon: <Clock className="h-5 w-5" /> },
-                        { id: 'announcements', label: 'Announcements', icon: <Bell className="h-5 w-5" /> },
-                    ].map(tab => (
+                <div className="w-full md:w-64 flex flex-col gap-1.5 shrink-0">
+                        {[
+                            { id: 'materials', label: 'Course Materials', icon: <BookOpen className="h-5 w-5" />, disabled: isPending },
+                            { id: 'messages', label: 'Live Chat', icon: <MessageSquare className="h-5 w-5" />, disabled: isPending },
+                            { id: 'timetable', label: 'Timetable', icon: <Clock className="h-5 w-5" />, disabled: isPending },
+                            { id: 'announcements', label: 'Announcements', icon: <Bell className="h-5 w-5" />, disabled: false },
+                        ].map(tab => (
                         <button
                             key={tab.id}
+                            disabled={tab.disabled}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-3 px-5 py-3.5 text-sm font-bold rounded-2xl transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-200' : 'text-slate-600 hover:bg-slate-100 bg-white border border-slate-200'}`}
+                            className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 text-left relative ${
+                                activeTab === tab.id 
+                                    ? 'bg-brand-900 text-white shadow-sm' 
+                                    : tab.disabled 
+                                        ? 'text-slate-300 cursor-not-allowed' 
+                                        : 'text-slate-600 hover:bg-slate-100 hover:text-brand-900'
+                            }`}
                         >
                             {tab.icon}
                             {tab.label}
+                            {tab.disabled && <Lock className="h-3 w-3 ml-auto text-slate-300" />}
                         </button>
                     ))}
                 </div>
 
                 {/* Main Workspace */}
-                <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 p-8 min-h-[600px]">
+                <div className="flex-1 formal-card min-h-[600px] flex flex-col">
 
                     {/* Generic Course Selector (Shared between Attendance, Marks, Materials) */}
-                    {['attendance', 'marks', 'materials'].includes(activeTab) && (
-                        <div className="mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-wrap gap-6 items-end">
+                    {['materials'].includes(activeTab) && (
+                        <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap gap-5 items-end rounded-t-2xl">
                             <div className="flex-1 min-w-[200px]">
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Assigned Course</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Assigned Course</label>
                                 <select 
-                                    className="w-full border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm font-bold text-slate-700 bg-white"
+                                    className="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-primary focus:ring-brand-primary p-2.5 text-sm font-semibold text-slate-800 bg-white"
                                     value={selectedCourseId}
                                     onChange={e => setSelectedCourseId(e.target.value)}
                                 >
@@ -218,264 +193,156 @@ const FacultyDashboard = () => {
                                     ))}
                                 </select>
                             </div>
-                            
-                            {activeTab === 'attendance' && (
-                                <div className="w-[200px]">
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                                    <input type="date" className="w-full border border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm font-bold text-slate-700 bg-white" value={attDate} onChange={e => setAttDate(e.target.value)} />
-                                </div>
-                            )}
-
-                            {activeTab === 'marks' && (
-                                <>
-                                    <div className="w-[200px]">
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Exam Type</label>
-                                        <select className="w-full border border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm font-bold text-slate-700 bg-white" value={examType} onChange={e => setExamType(e.target.value)}>
-                                            <option>Mid-Semester</option>
-                                            <option>End-Semester</option>
-                                            <option>Internal Assignment</option>
-                                        </select>
-                                    </div>
-                                    <div className="w-[150px]">
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Total Marks</label>
-                                        <input type="number" className="w-full border border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm font-bold text-slate-700 bg-white" value={totalMarks} onChange={e => setTotalMarks(e.target.value)} />
-                                    </div>
-                                </>
-                            )}
                         </div>
                     )}
 
-                    {/* ATTENDANCE TAB */}
-                    {activeTab === 'attendance' && (
-                        <motion.div initial={{opacity:0}} animate={{opacity:1}}>
-                            <h2 className="text-xl font-black text-slate-800 mb-6">Daily Attendance Entry</h2>
-                            {students.length === 0 ? (
-                                <div className="bg-slate-50 rounded-2xl border border-slate-100 p-12 text-center">
-                                    <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                                    <p className="font-bold text-slate-500">No students found or course not selected.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                                    <table className="min-w-full divide-y divide-slate-100">
-                                        <thead className="bg-slate-50">
-                                            <tr>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Enrollment No</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Student Name</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50 bg-white">
-                                            {students.map((s, idx) => (
-                                                <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 text-sm font-bold text-indigo-600">{s.enrollment_no}</td>
-                                                    <td className="px-6 py-4 text-sm font-bold text-slate-800">{s.first_name} {s.last_name}</td>
-                                                    <td className="px-6 py-4">
-                                                        <select 
-                                                            className={`text-xs font-black px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${s.attStatus === 'Present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}
-                                                            value={s.attStatus}
-                                                            onChange={e => {
-                                                                const newSt = [...students];
-                                                                newSt[idx].attStatus = e.target.value;
-                                                                setStudents(newSt);
-                                                            }}
-                                                        >
-                                                            <option value="Present">Present</option>
-                                                            <option value="Absent">Absent</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <button 
-                                                            onClick={() => handleAttendanceSubmit(s.id, s.attStatus)}
-                                                            className="text-xs font-bold bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition"
-                                                        >
-                                                            Save
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {/* MARKS TAB */}
-                    {activeTab === 'marks' && (
-                        <motion.div initial={{opacity:0}} animate={{opacity:1}}>
-                            <h2 className="text-xl font-black text-slate-800 mb-6">Grade Uploads</h2>
-                            {students.length === 0 ? (
-                                <div className="bg-slate-50 rounded-2xl border border-slate-100 p-12 text-center">
-                                    <FileSpreadsheet className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                                    <p className="font-bold text-slate-500">No students found or course not selected.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                                    <table className="min-w-full divide-y divide-slate-100">
-                                        <thead className="bg-slate-50">
-                                            <tr>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Enrollment No</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Student Name</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Marks Obtained</th>
-                                                <th className="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50 bg-white">
-                                            {students.map((s, idx) => (
-                                                <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 text-sm font-bold text-indigo-600">{s.enrollment_no}</td>
-                                                    <td className="px-6 py-4 text-sm font-bold text-slate-800">{s.first_name} {s.last_name}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <input 
-                                                                type="number" 
-                                                                className="w-20 border border-slate-200 rounded-lg p-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
-                                                                placeholder="0"
-                                                                value={s.markObtained}
-                                                                onChange={e => {
-                                                                    const newSt = [...students];
-                                                                    newSt[idx].markObtained = e.target.value;
-                                                                    setStudents(newSt);
-                                                                }}
-                                                            />
-                                                            <span className="text-sm font-bold text-slate-400">/ {totalMarks}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <button 
-                                                            onClick={() => handleMarkSubmit(s.id, s.markObtained)}
-                                                            className="text-xs font-bold bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition"
-                                                        >
-                                                            Save Grade
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {/* MATERIALS TAB */}
-                    {activeTab === 'materials' && (
-                        <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-8">
-                            <div>
-                                <h2 className="text-xl font-black text-slate-800 mb-2">Study Materials</h2>
-                                <p className="text-sm text-slate-500 font-medium mb-6">Upload PDFs for your students. These will also be used by the AI Chatbot to answer their questions!</p>
-                                
-                                <label className="block border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 hover:bg-indigo-50 rounded-3xl p-12 text-center cursor-pointer transition-all group">
-                                    <Upload className="h-10 w-10 text-indigo-300 group-hover:text-indigo-500 mx-auto mb-4 transition-colors"/>
-                                    <p className="text-base font-bold text-indigo-600">{isUploading ? 'Uploading & Processing...' : 'Click to upload Course Material PDF'}</p>
-                                    <p className="text-sm text-slate-400 mt-2 font-medium">Selected Course code will automatically be appended to the file name.</p>
-                                    <input type="file" accept=".pdf" onChange={handleFileUpload} disabled={isUploading || !selectedCourseId} className="sr-only"/>
-                                </label>
-                                {uploadMsg && (
-                                    <p className={`mt-4 text-sm font-bold text-center ${uploadMsg.startsWith('✓') ? 'text-emerald-600' : 'text-red-500'}`}>{uploadMsg}</p>
-                                )}
+                    {isPending && (
+                        <div className="bg-amber-50 border-b border-amber-100 px-6 py-4 flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                                <ShieldCheck className="h-5 w-5 text-amber-600" />
                             </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-amber-900">Account Approval Pending</h3>
+                                <p className="text-xs text-amber-700 font-medium">Your faculty credentials are being verified by administration. Some tools are temporarily restricted.</p>
+                            </div>
+                            <div className="ml-auto hidden sm:block">
+                                <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border border-amber-200">Pending Review</span>
+                            </div>
+                        </div>
+                    )}
 
-                            <div className="border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                                    <h3 className="font-black text-slate-700">Previously Uploaded Materials</h3>
-                                </div>
-                                <div className="max-h-[300px] overflow-y-auto">
-                                    {materials.length === 0 ? (
-                                        <div className="p-8 text-center text-slate-400 font-medium">No materials uploaded yet.</div>
-                                    ) : (
-                                        <ul className="divide-y divide-slate-100">
-                                            {materials.map(m => (
-                                                <li key={m.id} className="flex items-center justify-between p-4 hover:bg-slate-50">
-                                                    <div className="flex items-center gap-3">
-                                                        <BookOpen className="h-5 w-5 text-indigo-500" />
-                                                        <span className="font-bold text-sm text-slate-700">{m.title}</span>
-                                                    </div>
-                                                    <span className="text-xs text-slate-400 font-medium">{new Date(m.created_at).toLocaleDateString()}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                    <div className="p-6 flex-1">
+
+                        {/* MATERIALS TAB */}
+                        {activeTab === 'materials' && (
+                            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-8">
+                                <div>
+                                    <h2 className="text-lg font-bold text-brand-900 mb-1">Study Materials</h2>
+                                    <p className="text-sm text-slate-500 font-medium mb-5">Upload PDFs for your students. The AI Chatbot uses these to answer queries.</p>
+                                    
+                                    <label className="block border-2 border-dashed border-slate-300 hover:border-brand-primary bg-slate-50 hover:bg-brand-50 rounded-xl p-10 text-center cursor-pointer transition-all group">
+                                        <Upload className="h-8 w-8 text-slate-400 group-hover:text-brand-primary mx-auto mb-3 transition-colors"/>
+                                        <p className="text-sm font-semibold text-slate-700 group-hover:text-brand-700">{isUploading ? 'Uploading & Processing...' : 'Click to upload PDF Document'}</p>
+                                        <p className="text-xs text-slate-500 mt-1 font-medium bg-white border border-slate-200 rounded px-2 py-1 mx-auto max-w-xs">{selectedCourseId ? 'Course ID appended automatically' : 'Select a course first'}</p>
+                                        <input type="file" accept=".pdf" onChange={handleFileUpload} disabled={isUploading || !selectedCourseId} className="sr-only"/>
+                                    </label>
+                                    {uploadMsg && (
+                                        <p className={`mt-3 text-sm font-semibold text-center ${uploadMsg.startsWith('✓') ? 'text-emerald-600' : 'text-rose-600'}`}>{uploadMsg}</p>
                                     )}
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
 
-                    {/* TIMETABLE TAB */}
-                    {activeTab === 'timetable' && (
-                        <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
-                            <div className="flex items-center justify-between">
-                            <h3 className="font-black text-slate-800 text-xl">Manage Timetable</h3>
-                            <button onClick={()=>setShowTTForm(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 transition-colors">
-                                <Plus className="h-4 w-4"/> Add Entry
-                            </button>
-                            </div>
-                            {Object.entries(groupTT(timetable)).map(([day, entries]) => entries.length === 0 ? null : (
-                            <div key={day} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                                <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
-                                <h4 className="font-black text-indigo-800 text-sm uppercase tracking-widest">{day}</h4>
+                                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+                                        <h3 className="font-semibold text-sm text-slate-700">Previously Uploaded Materials</h3>
+                                    </div>
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                        {materials.length === 0 ? (
+                                            <div className="p-6 text-center text-slate-500 text-sm font-medium">No materials uploaded yet.</div>
+                                        ) : (
+                                            <ul className="divide-y divide-slate-100">
+                                                {materials.map(m => (
+                                                    <li key={m.id} className="flex items-center justify-between p-4 hover:bg-slate-50">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-slate-100 border border-slate-200 rounded-md">
+                                                                <BookOpen className="h-4 w-4 text-slate-600" />
+                                                            </div>
+                                                            <span className="font-semibold text-sm text-brand-900">{m.title}</span>
+                                                        </div>
+                                                        <span className="text-xs text-slate-500 font-medium">{new Date(m.created_at).toLocaleDateString()}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="divide-y divide-slate-100">
-                                {entries.map(e=>(
-                                    <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
-                                    <div className="text-xs font-black text-slate-400 w-24 flex-shrink-0 flex items-center gap-1.5">
-                                        <Clock className="h-3.5 w-3.5"/>{e.time_slot}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-slate-800 text-sm">{e.subject_name}</p>
-                                        <p className="text-xs font-medium text-slate-500 mt-0.5">{e.subject_code} · {e.faculty_name} · {e.room}</p>
-                                    </div>
-                                    <button onClick={()=>deleteTTEntry(e.id)} className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
-                                        <Trash2 className="h-4 w-4"/>
+                            </motion.div>
+                        )}
+
+                        {/* TIMETABLE TAB */}
+                        {activeTab === 'timetable' && (
+                            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                                    <h3 className="font-bold text-brand-900 text-lg">Manage Timetable</h3>
+                                    <button onClick={()=>setShowTTForm(true)} className="btn-primary text-sm px-4 py-2">
+                                        <Plus className="h-4 w-4 mr-1.5 inline-block"/> Add Entry
                                     </button>
-                                    </div>
-                                ))}
                                 </div>
+                                {Object.entries(groupTT(timetable)).map(([day, entries]) => entries.length === 0 ? null : (
+                                <div key={day} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-4">
+                                    <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-200">
+                                        <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">{day}</h4>
+                                    </div>
+                                    <div className="divide-y divide-slate-100">
+                                    {entries.map(e=>(
+                                        <div key={e.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                                            <div className="text-xs font-semibold text-slate-500 w-24 flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded">
+                                                <Clock className="h-3 w-3"/>{e.time_slot}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-brand-900 text-sm mb-0.5">{e.subject_name}</p>
+                                                <p className="text-xs font-medium text-slate-500">{e.subject_code} &bull; {e.faculty_name} &bull; Room {e.room}</p>
+                                            </div>
+                                            <button onClick={()=>deleteTTEntry(e.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors flex-shrink-0">
+                                                <Trash2 className="h-4 w-4"/>
+                                            </button>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </div>
+                                ))}
+                                {showTTForm && (
+                                <Modal title="Add Timetable Entry" onClose={()=>setShowTTForm(false)}>
+                                    <form onSubmit={addTTEntry} className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[
+                                                {label:'Department',key:'department',type:'text'},
+                                                {label:'Semester',key:'semester',type:'number'},
+                                                {label:'Time Slot (e.g. 09:00 - 10:00)',key:'time_slot',type:'text'},
+                                                {label:'Subject Name',key:'subject_name',type:'text'},
+                                                {label:'Subject Code',key:'subject_code',type:'text'},
+                                                {label:'Room',key:'room',type:'text'},
+                                                {label:'Faculty Name',key:'faculty_name',type:'text'},
+                                            ].map(({label,key,type})=>(
+                                                <div key={key} className={key === 'subject_name' ? 'col-span-2' : ''}>
+                                                    <label className="text-xs font-bold text-slate-600 mb-1.5 block">{label}</label>
+                                                    <input type={type} value={ttForm[key]} onChange={e=>setTtForm(p=>({...p,[key]:type==='number'?+e.target.value:e.target.value}))} required
+                                                        className="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-primary focus:ring-brand-primary p-2.5 text-sm font-medium text-slate-800 bg-white"/>
+                                                </div>
+                                            ))}
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-600 mb-1.5 block">Day of Week</label>
+                                                <select value={ttForm.day_of_week} onChange={e=>setTtForm(p=>({...p,day_of_week:e.target.value}))}
+                                                    className="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-primary focus:ring-brand-primary p-2.5 text-sm font-medium text-slate-800 bg-white">
+                                                    {DAYS_ORDER.map(d=><option key={d}>{d}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 border-t border-slate-100 mt-6 flex justify-end gap-3">
+                                            <button type="button" onClick={()=>setShowTTForm(false)} className="btn-secondary px-4 py-2 text-sm">Cancel</button>
+                                            <button type="submit" className="btn-primary px-4 py-2 text-sm">Save Entry</button>
+                                        </div>
+                                    </form>
+                                </Modal>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* MESSAGES TAB */}
+                        {activeTab === 'messages' && (
+                            <div className="h-full">
+                                <Messages />
                             </div>
-                            ))}
-                            {showTTForm && (
-                            <Modal title="Add Timetable Entry" onClose={()=>setShowTTForm(false)}>
-                                <form onSubmit={addTTEntry} className="space-y-4">
-                                {[
-                                    {label:'Department',key:'department',type:'text'},
-                                    {label:'Semester',key:'semester',type:'number'},
-                                    {label:'Time Slot (e.g. 09:00 - 10:00)',key:'time_slot',type:'text'},
-                                    {label:'Subject Name',key:'subject_name',type:'text'},
-                                    {label:'Subject Code',key:'subject_code',type:'text'},
-                                    {label:'Room',key:'room',type:'text'},
-                                    {label:'Faculty Name',key:'faculty_name',type:'text'},
-                                ].map(({label,key,type})=>(
-                                    <div key={key}>
-                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5">{label}</label>
-                                    <input type={type} value={ttForm[key]} onChange={e=>setTtForm(p=>({...p,[key]:type==='number'?+e.target.value:e.target.value}))} required
-                                        className="w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all"/>
-                                    </div>
-                                ))}
-                                <div>
-                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5">Day</label>
-                                    <select value={ttForm.day_of_week} onChange={e=>setTtForm(p=>({...p,day_of_week:e.target.value}))}
-                                    className="w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all">
-                                    {DAYS_ORDER.map(d=><option key={d}>{d}</option>)}
-                                    </select>
-                                </div>
-                                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-black transition-colors shadow-lg shadow-indigo-100 mt-4">
-                                    Save Timetable Entry
-                                </button>
-                                </form>
-                            </Modal>
-                            )}
-                        </motion.div>
-                    )}
+                        )}
 
-                    {/* ANNOUNCEMENTS TAB */}
-                    {activeTab === 'announcements' && (
-                        <div className="-mt-10">
-                            {/* Reusing existing Announcements component component with admin privileges enabled */}
-                            <Announcements isAdmin={true} />
-                        </div>
-                    )}
+                        {/* ANNOUNCEMENTS TAB */}
+                        {activeTab === 'announcements' && (
+                            <div className="">
+                                {/* Reusing existing Announcements component component with admin privileges enabled */}
+                                <Announcements isAdmin={true} />
+                            </div>
+                        )}
 
+                    </div>
                 </div>
             </div>
         </div>

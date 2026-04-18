@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, get_current_user_optional
 from ai_engine import rag_chain, intent
 
 router = APIRouter()
@@ -74,12 +74,13 @@ def find_matching_form(query: str, forms):
 def handle_chat_query(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: Optional[models.User] = Depends(get_current_user_optional)
 ):
     user_query = request.message
     
     # 1. Determine Intent
-    query_intent = intent.classify_intent(user_query)
+    # Guests only have GENERAL intent
+    query_intent = intent.classify_intent(user_query) if current_user else "GENERAL"
     
     chat_resp = None
     
@@ -156,8 +157,8 @@ def handle_chat_query(
                 source="SYSTEM_ERROR"
             )
 
-    # 4. Persistence: Save Message to DB
-    if chat_resp:
+    # 4. Persistence: Save Message to DB (Only if authenticated)
+    if chat_resp and current_user:
         db_msg = models.ChatMessage(
             user_id=current_user.id,
             query=user_query,

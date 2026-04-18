@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Users, Compass, ExternalLink } from 'lucide-react';
+import { BookOpen, Users, Compass, ExternalLink, MessageSquare, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -76,18 +76,19 @@ const GuestDashboard = () => {
                         className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden flex flex-col h-full"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-white pointer-events-none"></div>
-                        <div className="relative z-10 flex-grow">
+                        <div className="relative z-10 flex flex-col h-full">
                             <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-6 border border-indigo-100">
-                                <Users className="h-6 w-6 text-indigo-600" />
+                                <MessageSquare className="h-6 w-6 text-indigo-600" />
                             </div>
-                            <h2 className="text-xl font-black text-slate-900 mb-3">AI Student Assistant</h2>
-                            <p className="text-slate-500 leading-relaxed font-medium">
-                                Enrolled students get exclusive access to our custom RAG-powered chatbot. It can instantly answer questions about the syllabus, campus rules, library hours, and more based on official college documents.
+                            <h2 className="text-xl font-black text-slate-900 mb-3">Institute AI Assistant</h2>
+                            <p className="text-slate-500 leading-relaxed font-medium flex-grow">
+                                Have questions about our programs, campus life, or admissions? Our AI assistant is now available for guests to explore institutional information in real-time.
                             </p>
                             
-                            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-400 font-bold rounded-lg text-sm border border-slate-200 cursor-not-allowed">
-                                Register to Unlock
-                            </div>
+                            <Link to="/guest-chat" className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all hover:-translate-y-1">
+                                Try Guest Chat
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
                         </div>
                     </motion.div>
                 </div>

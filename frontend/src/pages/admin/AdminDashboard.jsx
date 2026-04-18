@@ -14,23 +14,23 @@ const fmt = (ts) => ts ? new Date(ts).toLocaleDateString('en-IN', { day: 'numeri
 const fmtTime = (ts) => ts ? new Date(ts).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
 
 const ROLE_COLORS = {
-  admin:   'bg-red-100 text-red-700 border-red-200',
-  faculty: 'bg-purple-100 text-purple-700 border-purple-200',
-  student: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  admin:   'bg-rose-50 text-rose-700 border-rose-200',
+  faculty: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  student: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 const StatCard = ({ icon, label, value, color, delay }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 15 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex items-center gap-5"
+    className="formal-card p-6 flex items-center gap-5"
   >
-    <div className={`p-4 rounded-2xl ${color}`}>{icon}</div>
+    <div className={`p-3.5 rounded-lg border ${color}`}>{icon}</div>
     <div>
-      <p className="text-3xl font-black text-slate-900">{value ?? '–'}</p>
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">{label}</p>
+      <p className="text-3xl font-bold text-brand-900 tracking-tight">{value ?? '–'}</p>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{label}</p>
     </div>
   </motion.div>
 );
@@ -38,16 +38,16 @@ const StatCard = ({ icon, label, value, color, delay }) => (
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
     <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
+      initial={{ scale: 0.98, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 z-10 max-h-[90vh] overflow-y-auto"
+      className="relative bg-white rounded-xl shadow-formal w-full max-w-lg p-6 z-10 max-h-[90vh] overflow-y-auto"
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-black text-slate-900">{title}</h2>
-        <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
-          <X className="h-5 w-5 text-slate-500" />
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+        <h2 className="text-lg font-bold text-brand-900">{title}</h2>
+        <button onClick={onClose} className="p-1.5 rounded-md hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600">
+          <X className="h-5 w-5" />
         </button>
       </div>
       {children}
@@ -59,19 +59,30 @@ const Modal = ({ title, onClose, children }) => (
 const NavItem = ({ icon, label, tab, active, onClick, badge }) => (
   <button
     onClick={() => onClick(tab)}
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
       active
-        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-100'
-        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+        ? 'bg-brand-900 text-white shadow-sm'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-brand-900'
     }`}
   >
     {icon}
     <span>{label}</span>
     {badge !== undefined && (
-      <span className={`ml-auto text-xs font-black px-2 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'}`}>
+      <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-md ${active ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'}`}>
         {badge}
       </span>
     )}
+  </button>
+);
+
+const ActionButton = ({ icon, label, onClick, color, disabled }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${color} disabled:opacity-30 disabled:cursor-not-allowed`}
+  >
+    {icon}
+    {label}
   </button>
 );
 
@@ -186,47 +197,51 @@ const AdminDashboard = () => {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-[calc(100vh-4rem)] flex">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-100 hidden lg:flex flex-col shadow-sm">
-        <div className="p-6 border-b border-slate-100">
+      <aside className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col shadow-sm">
+        <div className="p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-100">
+            <div className="h-10 w-10 rounded-lg bg-brand-900 flex items-center justify-center shadow-sm">
               <ShieldCheck className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="font-black text-slate-900 text-sm">Admin Console</h1>
-              <p className="text-xs text-slate-400 font-medium">EduSphere Portal</p>
+              <h1 className="font-bold text-brand-900 text-sm tracking-tight">Admin Console</h1>
+              <p className="text-xs text-slate-500 font-medium">EduSphere Portal</p>
             </div>
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <p className="text-xs font-black text-slate-300 uppercase tracking-widest px-4 mb-3 mt-2">Dashboard</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-2">Dashboard</p>
           <NavItem icon={<BarChart3 className="h-4 w-4"/>} label="Overview" tab="overview" active={activeTab==='overview'} onClick={setActiveTab} />
-          <p className="text-xs font-black text-slate-300 uppercase tracking-widest px-4 mb-3 mt-5">Members</p>
+          
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-6">Members</p>
           <NavItem icon={<Users className="h-4 w-4"/>} label="All Users" tab="users" active={activeTab==='users'} onClick={setActiveTab} badge={stats?.total_users} />
+          <NavItem icon={<ShieldCheck className="h-4 w-4"/>} label="User Management" tab="management" active={activeTab==='management'} onClick={setActiveTab} />
           <NavItem icon={<GraduationCap className="h-4 w-4"/>} label="Students" tab="students" active={activeTab==='students'} onClick={setActiveTab} badge={stats?.total_students} />
           <NavItem icon={<UserCog className="h-4 w-4"/>} label="Faculty" tab="faculty" active={activeTab==='faculty'} onClick={setActiveTab} badge={stats?.total_faculty} />
-          <p className="text-xs font-black text-slate-300 uppercase tracking-widest px-4 mb-3 mt-5">Content</p>
+          
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-6">Content</p>
           <NavItem icon={<Bell className="h-4 w-4"/>} label="Announcements" tab="announcements" active={activeTab==='announcements'} onClick={setActiveTab} badge={stats?.total_announcements} />
-          <NavItem icon={<FileText className="h-4 w-4"/>} label="Forms" tab="forms" active={activeTab==='forms'} onClick={setActiveTab} badge={stats?.total_forms} />
+          <NavItem icon={<FileText className="h-4 w-4"/>} label="Forms & Docs" tab="forms" active={activeTab==='forms'} onClick={setActiveTab} badge={stats?.total_forms} />
           <NavItem icon={<Calendar className="h-4 w-4"/>} label="Timetable" tab="timetable" active={activeTab==='timetable'} onClick={setActiveTab} />
-          <p className="text-xs font-black text-slate-300 uppercase tracking-widest px-4 mb-3 mt-5">AI & Logs</p>
+          
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-6">AI & Logs</p>
           <NavItem icon={<MessageSquare className="h-4 w-4"/>} label="Chat Logs" tab="chatlogs" active={activeTab==='chatlogs'} onClick={setActiveTab} badge={stats?.total_chat_queries} />
           <NavItem icon={<Database className="h-4 w-4"/>} label="Knowledge Base" tab="rag" active={activeTab==='rag'} onClick={setActiveTab} />
         </nav>
       </aside>
 
       {/* Main */}
-      <main className="flex-1 min-w-0 overflow-auto">
-        <header className="bg-white border-b border-slate-100 px-8 py-5 flex items-center gap-4 sticky top-0 z-30">
+      <main className="flex-1 min-w-0 overflow-auto bg-slate-50">
+        <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center gap-4 sticky top-0 z-30 shadow-sm">
           <div className="flex-1">
-            <h2 className="text-lg font-black text-slate-900 capitalize">{activeTab === 'rag' ? 'Knowledge Base' : activeTab === 'chatlogs' ? 'Chat Logs' : activeTab}</h2>
-            <p className="text-xs text-slate-400 font-medium">EduSphere Admin Console</p>
+            <h2 className="text-xl font-bold text-brand-900 capitalize tracking-tight">{activeTab === 'rag' ? 'Knowledge Base' : activeTab === 'chatlogs' ? 'Chat History' : activeTab}</h2>
+            <p className="text-sm text-slate-500 font-medium">EduSphere Admin Operations</p>
           </div>
           {/* Mobile tab selector */}
           <div className="lg:hidden">
-            <select className="text-sm border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            <select className="text-sm border-slate-300 rounded-lg shadow-sm px-3 py-2 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
               value={activeTab} onChange={e => setActiveTab(e.target.value)}>
               {['overview','users','students','faculty','announcements','forms','timetable','chatlogs','rag'].map(t => (
                 <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>
@@ -235,53 +250,62 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        <div className="p-6 lg:p-8 max-w-7xl">
+        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
 
           {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard icon={<Users className="h-6 w-6 text-indigo-600"/>} label="Total Users" value={stats?.total_users} color="bg-indigo-50" delay={0.05}/>
-                <StatCard icon={<GraduationCap className="h-6 w-6 text-emerald-600"/>} label="Students" value={stats?.total_students} color="bg-emerald-50" delay={0.1}/>
-                <StatCard icon={<UserCog className="h-6 w-6 text-purple-600"/>} label="Faculty" value={stats?.total_faculty} color="bg-purple-50" delay={0.15}/>
-                <StatCard icon={<Bell className="h-6 w-6 text-amber-600"/>} label="Announcements" value={stats?.total_announcements} color="bg-amber-50" delay={0.2}/>
-                <StatCard icon={<FileText className="h-6 w-6 text-blue-600"/>} label="Forms" value={stats?.total_forms} color="bg-blue-50" delay={0.25}/>
-                <StatCard icon={<MessageSquare className="h-6 w-6 text-rose-600"/>} label="AI Chat Queries" value={stats?.total_chat_queries} color="bg-rose-50" delay={0.3}/>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                <StatCard icon={<Users className="h-5 w-5 text-indigo-600"/>} label="Total Users" value={stats?.total_users} color="bg-indigo-50 border-indigo-100" delay={0.05}/>
+                <StatCard icon={<GraduationCap className="h-5 w-5 text-emerald-600"/>} label="Students" value={stats?.total_students} color="bg-emerald-50 border-emerald-100" delay={0.1}/>
+                <StatCard icon={<UserCog className="h-5 w-5 text-purple-600"/>} label="Faculty" value={stats?.total_faculty} color="bg-purple-50 border-purple-100" delay={0.15}/>
+                <StatCard icon={<Bell className="h-5 w-5 text-amber-600"/>} label="Announcements" value={stats?.total_announcements} color="bg-amber-50 border-amber-100" delay={0.2}/>
+                <StatCard icon={<FileText className="h-5 w-5 text-blue-600"/>} label="Forms & Docs" value={stats?.total_forms} color="bg-blue-50 border-blue-100" delay={0.25}/>
+                <StatCard icon={<MessageSquare className="h-5 w-5 text-rose-600"/>} label="AI Queries" value={stats?.total_chat_queries} color="bg-rose-50 border-rose-100" delay={0.3}/>
               </div>
 
               {/* Quick sections */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Users */}
-                <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.35}} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                  <h3 className="font-black text-slate-800 mb-4 text-sm uppercase tracking-widest">Recent Users</h3>
-                  <div className="space-y-3">
+                <motion.div initial={{opacity:0,y:15}} animate={{opacity:1,y:0}} transition={{delay:0.35}} className="formal-card p-6">
+                  <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+                    <h3 className="font-bold text-brand-900 text-base">Recent Users</h3>
+                    <button onClick={()=>setActiveTab('users')} className="text-sm font-semibold text-brand-primary hover:text-brand-auth-hover">View All</button>
+                  </div>
+                  <div className="space-y-4">
                     {users.slice(0,5).map(u => (
-                      <div key={u.id} className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                      <div key={u.id} className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 text-sm font-bold flex-shrink-0">
                           {u.email[0].toUpperCase()}
                         </div>
-                        <span className="text-sm font-bold text-slate-700 flex-1 truncate">{u.email}</span>
-                        <span className={`text-xs font-black px-2 py-0.5 rounded-full border ${ROLE_COLORS[u.role]}`}>{u.role}</span>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-sm font-semibold text-brand-900 block truncate">{u.email}</span>
+                            <span className="text-xs text-slate-500 font-medium">{fmt(u.created_at)}</span>
+                        </div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${ROLE_COLORS[u.role]}`}>{u.role}</span>
                       </div>
                     ))}
                   </div>
                 </motion.div>
 
                 {/* Recent Forms */}
-                <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.4}} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                  <h3 className="font-black text-slate-800 mb-4 text-sm uppercase tracking-widest">Recent Forms</h3>
+                <motion.div initial={{opacity:0,y:15}} animate={{opacity:1,y:0}} transition={{delay:0.4}} className="formal-card p-6">
+                  <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+                    <h3 className="font-bold text-brand-900 text-base">Recent Documents</h3>
+                    <button onClick={()=>setActiveTab('forms')} className="text-sm font-semibold text-brand-primary hover:text-brand-auth-hover">Manage</button>
+                  </div>
                   {forms.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center py-6">No forms uploaded yet.</p>
+                    <p className="text-slate-500 text-sm text-center py-8 font-medium">No forms uploaded yet.</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {forms.slice(0,5).map(f => (
-                        <div key={f.id} className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                            <FileText className="h-4 w-4 text-red-500"/>
+                        <div key={f.id} className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-4 w-4 text-slate-500"/>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-700 truncate">{f.title}</p>
-                            <p className="text-xs text-slate-400">{fmt(f.created_at)}</p>
+                            <p className="text-sm font-semibold text-brand-900 truncate">{f.title}</p>
+                            <p className="text-xs font-medium text-slate-500">{fmt(f.created_at)}</p>
                           </div>
                         </div>
                       ))}
@@ -294,41 +318,41 @@ const AdminDashboard = () => {
 
           {/* ── USERS ────────────────────────────────────────────────────── */}
           {activeTab === 'users' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex flex-wrap items-center gap-4">
-                <h3 className="font-black text-slate-800">All Users</h3>
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="formal-card overflow-hidden">
+              <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-4">
+                <h3 className="font-bold text-brand-900 text-lg">Platform Users</h3>
                 <div className="ml-auto flex gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-                    <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search by email…" className="pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"/>
+                    <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search by email…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
                   </div>
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-slate-50/80">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
                       {['ID','Email','Role','Joined','Actions'].map(h=>(
-                        <th key={h} className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                        <th key={h} className="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {filtered(users, ['email','role']).map(u => (
-                      <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 text-xs font-black text-slate-400">#{u.id}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-slate-800">{u.email}</td>
+                      <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 text-xs font-semibold text-slate-500">#{u.id}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-brand-900">{u.email}</td>
                         <td className="px-6 py-4">
                           <select value={u.role} onChange={e=>changeRole(u.id,e.target.value)}
-                            className={`text-xs font-black px-3 py-1.5 rounded-full border cursor-pointer ${ROLE_COLORS[u.role]} focus:outline-none`}>
+                            className={`text-xs font-bold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${ROLE_COLORS[u.role]}`}>
                             <option value="student">student</option>
                             <option value="faculty">faculty</option>
                             <option value="admin">admin</option>
                           </select>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-400">{fmt(u.created_at)}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-slate-500">{fmt(u.created_at)}</td>
                         <td className="px-6 py-4">
-                          <button onClick={()=>deleteUser(u.id)} className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                          <button onClick={()=>deleteUser(u.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors">
                             <Trash2 className="h-4 w-4"/>
                           </button>
                         </td>
@@ -340,51 +364,163 @@ const AdminDashboard = () => {
             </motion.div>
           )}
 
+          {/* ── USER MANAGEMENT ─────────────────────────────────────────── */}
+          {activeTab === 'management' && (
+            <div className="space-y-6">
+              {/* Stats overview for management */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Pending Faculty</p>
+                  <p className="text-3xl font-black text-brand-900">{users.filter(u => u.status === 'pending').length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Banned Users</p>
+                  <p className="text-3xl font-black text-rose-600">{users.filter(u => u.status === 'banned').length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Active Staff</p>
+                  <p className="text-3xl font-black text-emerald-600">{users.filter(u => u.role === 'faculty' && u.status === 'active').length}</p>
+                </div>
+              </div>
+
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} className="formal-card overflow-hidden">
+                <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-4">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-brand-900 text-lg">Administrative User Controls</h3>
+                    <p className="text-xs text-slate-500 font-medium">Manage permissions, approvals, and access status.</p>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
+                    <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Filter users…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm font-medium"/>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['User Account','Current Role','Status','Quick Actions'].map(h=>(
+                          <th key={h} className="px-6 py-3.5 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {filtered(users, ['email','role','status']).map(u => (
+                        <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm border ${u.status === 'banned' ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-brand-50 text-brand-900 border-brand-100'}`}>
+                                {u.email[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <p className={`font-bold text-sm leading-none ${u.status === 'banned' ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{u.email}</p>
+                                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight">Joined {fmt(u.created_at)}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex flex-col gap-1.5">
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border self-start uppercase tracking-widest ${ROLE_COLORS[u.role]}`}>
+                                {u.role}
+                              </span>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => changeRole(u.id, u.role === 'student' ? 'faculty' : 'student')}
+                                  className="text-[10px] font-black text-brand-primary hover:underline"
+                                >
+                                  Swap to {u.role === 'student' ? 'Faculty' : 'Student'}
+                                </button>
+                                <button 
+                                  onClick={() => changeRole(u.id, 'admin')}
+                                  className="text-[10px] font-black text-rose-600 hover:underline border-l border-slate-200 pl-2"
+                                >
+                                  Make Admin
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className={`text-[10px] font-black px-3 py-1 rounded-full border uppercase tracking-widest ${
+                              u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              u.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              'bg-slate-100 text-slate-500 border-slate-200'
+                            }`}>
+                              {u.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex flex-wrap gap-2">
+                              {u.status === 'pending' && u.role === 'faculty' && (
+                                <ActionButton 
+                                  icon={<ShieldCheck className="h-3 w-3"/>}
+                                  label="Approve"
+                                  onClick={async () => {
+                                    try {
+                                      await api.patch(`/admin/users/${u.id}/approve`);
+                                      setUsers(prev => prev.map(user => user.id === u.id ? {...user, status: 'active'} : user));
+                                    } catch { alert('Approval failed'); }
+                                  }}
+                                  color="bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700"
+                                />
+                              )}
+                              
+                              <ActionButton 
+                                icon={u.status === 'banned' ? <ShieldCheck className="h-3 w-3"/> : <AlertCircle className="h-3 w-3"/>}
+                                label={u.status === 'banned' ? "Restore" : "Ban User"}
+                                onClick={async () => {
+                                  const newStatus = u.status === 'banned' ? 'active' : 'banned';
+                                  if (newStatus === 'banned' && !window.confirm(`Are you sure you want to ban ${u.email}?`)) return;
+                                  try {
+                                    await api.patch(`/admin/users/${u.id}/status`, { status: newStatus });
+                                    setUsers(prev => prev.map(user => user.id === u.id ? {...user, status: newStatus} : user));
+                                  } catch { alert('Status update failed'); }
+                                }}
+                                color={u.status === 'banned' ? "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50" : "bg-white text-rose-600 border-rose-200 hover:bg-rose-50"}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {/* ── STUDENTS ─────────────────────────────────────────────────── */}
           {activeTab === 'students' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex flex-wrap items-center gap-4">
-                <h3 className="font-black text-slate-800">Student Profiles</h3>
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="formal-card overflow-hidden">
+              <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-4">
+                <h3 className="font-bold text-brand-900 text-lg">Student Directory</h3>
                 <div className="ml-auto relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search students…" className="pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"/>
+                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search students…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-slate-50/80">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
-                      {['Name','Email','Enroll No.','Dept','Sem','CGPA','Attendance'].map(h=>(
-                        <th key={h} className="px-4 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                      {['Name','Email','Enroll No.','Dept','Sem'].map(h=>(
+                        <th key={h} className="px-5 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {filtered(students, ['first_name','last_name','email','enrollment_no','department']).map(s=>(
-                      <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-4">
+                      <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold flex-shrink-0">
                               {s.first_name?.[0]}
                             </div>
-                            <span className="text-sm font-bold text-slate-800">{s.first_name} {s.last_name}</span>
+                            <span className="text-sm font-semibold text-brand-900">{s.first_name} {s.last_name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-500">{s.email}</td>
-                        <td className="px-4 py-4 text-xs font-black text-indigo-600">{s.enrollment_no}</td>
-                        <td className="px-4 py-4 text-sm text-slate-500">{s.department}</td>
-                        <td className="px-4 py-4 text-sm font-bold text-slate-700 text-center">{s.current_semester}</td>
-                        <td className="px-4 py-4">
-                          <span className={`text-sm font-black ${s.cgpa>=8?'text-emerald-600':s.cgpa>=6?'text-amber-500':'text-red-500'}`}>{s.cgpa}</span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-slate-100 rounded-full h-1.5 w-16">
-                              <div className={`h-1.5 rounded-full ${s.attendance_pct>=75?'bg-emerald-500':'bg-red-400'}`} style={{width:`${s.attendance_pct}%`}}/>
-                            </div>
-                            <span className={`text-xs font-black ${s.attendance_pct>=75?'text-emerald-600':'text-red-500'}`}>{s.attendance_pct}%</span>
-                          </div>
-                        </td>
+                        <td className="px-5 py-4 text-sm font-medium text-slate-600">{s.email}</td>
+                        <td className="px-5 py-4 text-sm font-bold text-brand-primary">{s.enrollment_no}</td>
+                        <td className="px-5 py-4 text-sm font-medium text-slate-600">{s.department}</td>
+                        <td className="px-5 py-4 text-sm font-semibold text-brand-900 text-center">{s.current_semester}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -395,39 +531,39 @@ const AdminDashboard = () => {
 
           {/* ── FACULTY ─────────────────────────────────────────────────── */}
           {activeTab === 'faculty' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex flex-wrap items-center gap-4">
-                <h3 className="font-black text-slate-800">Faculty Directory</h3>
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="formal-card overflow-hidden">
+              <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-4">
+                <h3 className="font-bold text-brand-900 text-lg">Faculty Directory</h3>
                 <div className="ml-auto relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search faculty…" className="pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"/>
+                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search faculty…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-slate-50/80">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
                       {['Name','Email','Employee ID','Department','Designation'].map(h=>(
-                        <th key={h} className="px-4 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {filtered(faculty, ['first_name','last_name','email','department','designation']).map(f=>(
-                      <tr key={f.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-4">
+                      <tr key={f.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold flex-shrink-0">
                               {f.first_name?.[0]}
                             </div>
-                            <span className="text-sm font-bold text-slate-800">{f.first_name} {f.last_name}</span>
+                            <span className="text-sm font-semibold text-brand-900">{f.first_name} {f.last_name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-500">{f.email}</td>
-                        <td className="px-4 py-4 text-xs font-black text-purple-600">{f.employee_id}</td>
-                        <td className="px-4 py-4 text-sm text-slate-500">{f.department}</td>
-                        <td className="px-4 py-4">
-                          <span className="bg-purple-50 text-purple-700 text-xs font-black px-2 py-1 rounded-full border border-purple-100">{f.designation}</span>
+                        <td className="px-5 py-4 text-sm font-medium text-slate-600">{f.email}</td>
+                        <td className="px-5 py-4 text-sm font-bold text-brand-primary">{f.employee_id}</td>
+                        <td className="px-5 py-4 text-sm font-medium text-slate-600">{f.department}</td>
+                        <td className="px-5 py-4">
+                          <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200">{f.designation}</span>
                         </td>
                       </tr>
                     ))}
@@ -448,47 +584,47 @@ const AdminDashboard = () => {
           {activeTab === 'forms' && (
             <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
               {/* Upload area */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
+              <div className="formal-card p-8">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-blue-50 rounded-2xl"><Upload className="h-5 w-5 text-blue-600"/></div>
+                  <div className="p-2.5 bg-slate-100 border border-slate-200 rounded-lg"><Upload className="h-5 w-5 text-slate-600"/></div>
                   <div>
-                    <h3 className="font-black text-slate-800">Upload Application Form</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">PDF only — the AI chatbot will serve these to students automatically.</p>
+                    <h3 className="font-bold text-brand-900 text-lg">Upload Institution Document</h3>
+                    <p className="text-sm text-slate-500 mt-0.5">PDF only — the AI chatbot will serve these to users.</p>
                   </div>
                 </div>
-                <label className="block border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 hover:bg-indigo-50 rounded-2xl p-10 text-center cursor-pointer transition-all group">
-                  <Upload className="h-10 w-10 text-indigo-300 group-hover:text-indigo-500 mx-auto mb-3 transition-colors"/>
-                  <p className="text-sm font-bold text-indigo-600">{isUploading ? 'Uploading…' : 'Click to upload PDF'}</p>
-                  <p className="text-xs text-slate-400 mt-1">PDF up to 10 MB</p>
+                <label className="block border-2 border-dashed border-slate-300 hover:border-brand-primary bg-slate-50 hover:bg-brand-50 rounded-xl p-10 text-center cursor-pointer transition-all group">
+                  <Upload className="h-8 w-8 text-slate-400 group-hover:text-brand-primary mx-auto mb-3 transition-colors"/>
+                  <p className="text-sm font-semibold text-slate-700 group-hover:text-brand-700">{isUploading ? 'Uploading & Processing...' : 'Click to Upload PDF'}</p>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Max size: 10 MB per PDF</p>
                   <input type="file" accept=".pdf" onChange={handleFileUpload} disabled={isUploading} className="sr-only"/>
                 </label>
                 {uploadMsg && (
-                  <p className={`mt-3 text-sm font-bold text-center ${uploadMsg.startsWith('✓') ? 'text-emerald-600' : 'text-red-500'}`}>{uploadMsg}</p>
+                  <p className={`mt-4 text-sm font-semibold text-center ${uploadMsg.startsWith('✓') ? 'text-emerald-600' : 'text-rose-600'}`}>{uploadMsg}</p>
                 )}
               </div>
 
               {/* List */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                  <h3 className="font-black text-slate-800">Forms in System ({forms.length})</h3>
+              <div className="formal-card overflow-hidden">
+                <div className="p-5 border-b border-slate-200 bg-slate-50/50">
+                  <h3 className="font-bold text-brand-900 text-lg">Document Vault ({forms.length})</h3>
                 </div>
                 {forms.length === 0 ? (
-                  <div className="text-center py-16 text-slate-400">
-                    <FileText className="h-12 w-12 mx-auto opacity-20 mb-3"/>
-                    <p className="font-bold">No forms uploaded yet</p>
+                  <div className="text-center py-16 text-slate-500 font-medium text-sm">
+                    <FileText className="h-10 w-10 mx-auto text-slate-300 mb-3"/>
+                    <p>No documents found.</p>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-slate-50">
+                  <ul className="divide-y divide-slate-100 bg-white">
                     {forms.map(f=>(
-                      <li key={f.id} className="flex items-center gap-4 p-6 hover:bg-slate-50/50 transition-colors">
-                        <div className="h-10 w-10 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <FileText className="h-5 w-5 text-red-500"/>
+                      <li key={f.id} className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors">
+                        <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileText className="h-4 w-4 text-slate-600"/>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-800 truncate">{f.title}</p>
-                          <p className="text-xs text-slate-400">{f.description} · Added {fmt(f.created_at)}</p>
+                          <p className="font-semibold text-brand-900 truncate text-sm">{f.title}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">{f.description} &bull; Uploaded {fmt(f.created_at)}</p>
                         </div>
-                        <button onClick={()=>deleteForm(f.id)} className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                        <button onClick={()=>deleteForm(f.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors flex-shrink-0">
                           <Trash2 className="h-4 w-4"/>
                         </button>
                       </li>
@@ -502,28 +638,28 @@ const AdminDashboard = () => {
           {/* ── TIMETABLE ─────────────────────────────────────────────────── */}
           {activeTab === 'timetable' && (
             <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black text-slate-800 text-lg">Timetable Entries ({timetable.length})</h3>
-                <button onClick={()=>setShowTTForm(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 transition-colors">
-                  <Plus className="h-4 w-4"/> Add Entry
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <h3 className="font-bold text-brand-900 text-lg">Master Timetable ({timetable.length} entries)</h3>
+                <button onClick={()=>setShowTTForm(true)} className="btn-primary text-sm px-4 py-2">
+                  <Plus className="h-4 w-4 mr-1.5 inline-block"/> Add Entry
                 </button>
               </div>
               {Object.entries(groupTT(timetable)).map(([day, entries]) => entries.length === 0 ? null : (
-                <div key={day} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-100">
-                    <h4 className="font-black text-indigo-800 text-sm uppercase tracking-widest">{day}</h4>
+                <div key={day} className="formal-card overflow-hidden mb-6">
+                  <div className="px-5 py-3 bg-slate-50 border-b border-slate-200">
+                    <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">{day}</h4>
                   </div>
-                  <div className="divide-y divide-slate-50">
+                  <div className="divide-y divide-slate-100 bg-white">
                     {entries.map(e=>(
-                      <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors">
-                        <div className="text-xs font-black text-slate-400 w-24 flex-shrink-0 flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5"/>{e.time_slot}
+                      <div key={e.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                        <div className="text-xs font-semibold text-slate-500 w-24 flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded">
+                          <Clock className="h-3 w-3"/>{e.time_slot}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-800 text-sm">{e.subject_name}</p>
-                          <p className="text-xs text-slate-400">{e.subject_code} · {e.faculty_name} · {e.room}</p>
+                          <p className="font-semibold text-brand-900 text-sm mb-0.5">{e.subject_name}</p>
+                          <p className="text-xs font-medium text-slate-500">{e.department} · {e.subject_code} · {e.faculty_name} · Room {e.room}</p>
                         </div>
-                        <button onClick={()=>deleteTTEntry(e.id)} className="p-2 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                        <button onClick={()=>deleteTTEntry(e.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors flex-shrink-0">
                           <Trash2 className="h-4 w-4"/>
                         </button>
                       </div>
@@ -534,31 +670,34 @@ const AdminDashboard = () => {
               {showTTForm && (
                 <Modal title="Add Timetable Entry" onClose={()=>setShowTTForm(false)}>
                   <form onSubmit={addTTEntry} className="space-y-4">
-                    {[
-                      {label:'Department',key:'department',type:'text'},
-                      {label:'Semester',key:'semester',type:'number'},
-                      {label:'Time Slot (e.g. 09:00 - 10:00)',key:'time_slot',type:'text'},
-                      {label:'Subject Name',key:'subject_name',type:'text'},
-                      {label:'Subject Code',key:'subject_code',type:'text'},
-                      {label:'Room',key:'room',type:'text'},
-                      {label:'Faculty Name',key:'faculty_name',type:'text'},
-                    ].map(({label,key,type})=>(
-                      <div key={key}>
-                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5">{label}</label>
-                        <input type={type} value={ttForm[key]} onChange={e=>setTtForm(p=>({...p,[key]:type==='number'?+e.target.value:e.target.value}))} required
-                          className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"/>
-                      </div>
-                    ))}
-                    <div>
-                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5">Day</label>
-                      <select value={ttForm.day_of_week} onChange={e=>setTtForm(p=>({...p,day_of_week:e.target.value}))}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        {DAYS_ORDER.map(d=><option key={d}>{d}</option>)}
-                      </select>
+                    <div className="grid grid-cols-2 gap-4">
+                        {[
+                        {label:'Department',key:'department',type:'text'},
+                        {label:'Semester',key:'semester',type:'number'},
+                        {label:'Time Slot (e.g. 09:00 - 10:00)',key:'time_slot',type:'text'},
+                        {label:'Subject Name',key:'subject_name',type:'text'},
+                        {label:'Subject Code',key:'subject_code',type:'text'},
+                        {label:'Room',key:'room',type:'text'},
+                        {label:'Faculty Name',key:'faculty_name',type:'text'},
+                        ].map(({label,key,type})=>(
+                        <div key={key} className={key === 'subject_name' ? 'col-span-2' : ''}>
+                            <label className="text-xs font-bold text-slate-600 mb-1.5 block">{label}</label>
+                            <input type={type} value={ttForm[key]} onChange={e=>setTtForm(p=>({...p,[key]:type==='number'?+e.target.value:e.target.value}))} required
+                            className="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-primary focus:ring-brand-primary p-2.5 text-sm font-medium text-slate-800 bg-white"/>
+                        </div>
+                        ))}
+                        <div>
+                        <label className="text-xs font-bold text-slate-600 mb-1.5 block">Day of Week</label>
+                        <select value={ttForm.day_of_week} onChange={e=>setTtForm(p=>({...p,day_of_week:e.target.value}))}
+                            className="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-primary focus:ring-brand-primary p-2.5 text-sm font-medium text-slate-800 bg-white">
+                            {DAYS_ORDER.map(d=><option key={d}>{d}</option>)}
+                        </select>
+                        </div>
                     </div>
-                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black transition-colors shadow-lg shadow-indigo-100 mt-2">
-                      Add Entry
-                    </button>
+                    <div className="pt-4 border-t border-slate-100 mt-6 flex justify-end gap-3">
+                        <button type="button" onClick={()=>setShowTTForm(false)} className="btn-secondary px-4 py-2 text-sm">Cancel</button>
+                        <button type="submit" className="btn-primary px-4 py-2 text-sm">Add Entry</button>
+                    </div>
                   </form>
                 </Modal>
               )}
@@ -567,36 +706,39 @@ const AdminDashboard = () => {
 
           {/* ── CHAT LOGS ─────────────────────────────────────────────────── */}
           {activeTab === 'chatlogs' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-4">
-              <div className="flex items-center gap-4">
-                <h3 className="font-black text-slate-800 text-lg">AI Chat History ({chatLogs.length})</h3>
-                <div className="ml-auto relative">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <h3 className="font-bold text-brand-900 text-lg">AI Chat Audit Logs ({chatLogs.length})</h3>
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search queries…" className="pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 w-64"/>
+                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search queries…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
                 </div>
               </div>
-              {filtered(chatLogs, ['query','user_email','answer']).map(m=>(
-                <div key={m.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between gap-4 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
-                        {m.user_email?.[0]?.toUpperCase()}
+              
+              <div className="space-y-4">
+                {filtered(chatLogs, ['query','user_email','answer']).map(m=>(
+                  <div key={m.id} className="formal-card p-5">
+                    <div className="flex items-center justify-between gap-4 mb-3 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 text-xs font-bold flex-shrink-0">
+                          {m.user_email?.[0]?.toUpperCase()}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-600">{m.user_email}</span>
                       </div>
-                      <span className="text-xs font-bold text-slate-500">{m.user_email}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">{m.source}</span>
+                        <span className="text-xs font-medium text-slate-400">{fmtTime(m.timestamp)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-slate-100 text-slate-500 font-black px-2 py-0.5 rounded-full">{m.source}</span>
-                      <span className="text-xs text-slate-400">{fmtTime(m.timestamp)}</span>
-                    </div>
+                    <p className="text-sm font-semibold text-brand-900 mb-2 leading-relaxed"><span className="text-slate-400 mr-1">Q:</span>{m.query}</p>
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium"><span className="text-slate-400 mr-1">A:</span>{m.answer}</p>
                   </div>
-                  <p className="text-sm font-bold text-slate-800 mb-2">Q: {m.query}</p>
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">A: {m.answer}</p>
-                </div>
-              ))}
+                ))}
+              </div>
               {chatLogs.length === 0 && (
-                <div className="bg-white rounded-2xl border border-slate-100 text-center py-20 text-slate-400">
-                  <MessageSquare className="h-12 w-12 mx-auto opacity-20 mb-3"/>
-                  <p className="font-bold">No chat history yet</p>
+                <div className="formal-card text-center py-16 text-slate-400 font-medium text-sm">
+                  <MessageSquare className="h-10 w-10 mx-auto text-slate-300 mb-3"/>
+                  <p>No chat history available.</p>
                 </div>
               )}
             </motion.div>
@@ -604,29 +746,35 @@ const AdminDashboard = () => {
 
           {/* ── KNOWLEDGE BASE ─────────────────────────────────────────────── */}
           {activeTab === 'rag' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 max-w-2xl">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="p-4 bg-indigo-50 rounded-2xl"><Database className="h-6 w-6 text-indigo-600"/></div>
-                <div>
-                  <h3 className="font-black text-slate-800 text-xl">AI Knowledge Base</h3>
-                  <p className="text-sm text-slate-400 mt-0.5">Feed PDFs into ChromaDB for the AI chatbot to retrieve answers from.</p>
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} >
+              <div className="formal-card p-8 max-w-3xl">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-slate-100 border border-slate-200 rounded-lg"><Database className="h-6 w-6 text-slate-700"/></div>
+                    <div>
+                    <h3 className="font-bold text-brand-900 text-xl tracking-tight">AI Knowledge Base System</h3>
+                    <p className="text-sm text-slate-500 mt-1 font-medium">Manage vector embeddings and search configuration.</p>
+                    </div>
                 </div>
-              </div>
-              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-                <Database className="h-12 w-12 text-slate-200 mx-auto mb-4"/>
-                <p className="font-black text-slate-400 mb-1">ChromaDB Ingestion</p>
-                <p className="text-sm text-slate-400 mb-6">Upload college handbooks, syllabi, or prospectuses here. The AI will use them to answer student queries.</p>
-                <button disabled className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black opacity-50 cursor-not-allowed">
-                  Ingest to ChromaDB (coming soon)
-                </button>
-              </div>
-              <div className="mt-6 bg-blue-50 rounded-2xl p-5 space-y-2 text-sm text-blue-700">
-                <p className="font-black text-blue-900 mb-2">How it works</p>
-                <p>① PDF uploaded to <code className="bg-blue-100 px-1 rounded">data/uploads/</code></p>
-                <p>② PyPDFLoader extracts text chunks</p>
-                <p>③ HuggingFace Embeddings convert to vectors</p>
-                <p>④ Vectors stored permanently in ChromaDB</p>
-                <p>⑤ Chatbot retrieves context for student queries</p>
+                <div className="border border-slate-200 bg-slate-50 rounded-xl p-10 text-center">
+                    <Database className="h-10 w-10 text-slate-400 mx-auto mb-3"/>
+                    <p className="font-bold text-slate-700 mb-2">Vector DB Ingestion</p>
+                    <p className="text-sm text-slate-500 mb-6 font-medium max-w-md mx-auto">Upload institutional data directly into the ChromaDB vector database. This will build the context for the AI query system.</p>
+                    <button disabled className="btn-primary opacity-50 cursor-not-allowed">
+                        Initialize Ingestion Pipeline
+                    </button>
+                    <p className="text-xs text-slate-400 font-medium mt-3">Maintenance mode active.</p>
+                </div>
+                
+                <div className="mt-8">
+                  <h4 className="font-bold text-brand-900 text-sm tracking-wider uppercase mb-4">System Architecture</h4>
+                  <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-3 text-sm text-slate-600 font-medium">
+                      <div className="flex gap-3"><span className="font-bold text-slate-400">01</span><p>Documents monitored in <code className="bg-slate-100 px-1 border border-slate-200 rounded">data/uploads/</code></p></div>
+                      <div className="flex gap-3"><span className="font-bold text-slate-400">02</span><p>PyPDFLoader triggers automated text extraction</p></div>
+                      <div className="flex gap-3"><span className="font-bold text-slate-400">03</span><p>HuggingFace Model generates vector embeddings</p></div>
+                      <div className="flex gap-3"><span className="font-bold text-slate-400">04</span><p>Embeddings persisted to ChromaDB storage</p></div>
+                      <div className="flex gap-3"><span className="font-bold text-slate-400">05</span><p>LLM routes RAG queries through retriever context</p></div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

@@ -12,13 +12,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
 import GuestDashboard from './pages/guest/GuestDashboard';
+import Messages from './pages/public/Messages';
+import GuestChat from './pages/public/GuestChat';
 
 // New feature pages
 import Timetable from './pages/student/Timetable';
 import ProfileEdit from './pages/student/ProfileEdit';
-import Roadmap from './pages/student/Roadmap';
 import Announcements from './pages/student/Announcements';
-import Performance from './pages/student/Performance';
 
 // Placeholder page
 const Courses = () => <div className="p-8"><h1 className="text-2xl font-bold text-blue-600">Public Courses</h1></div>;
@@ -37,6 +37,7 @@ function App() {
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
                             <Route path="/courses" element={<Courses />} />
+                            <Route path="/guest-chat" element={<GuestChat />} />
                             <Route path="/guest/dashboard" element={<GuestDashboard />} />
 
                             {/* Student Protected Routes */}
@@ -44,9 +45,8 @@ function App() {
                                 <Route path="/student/dashboard" element={<StudentDashboard />} />
                                 <Route path="/student/timetable" element={<Timetable />} />
                                 <Route path="/student/profile" element={<ProfileEdit />} />
-                                <Route path="/student/roadmap" element={<Roadmap />} />
                                 <Route path="/student/announcements" element={<Announcements />} />
-                                <Route path="/student/performance" element={<Performance />} />
+                                <Route path="/student/messages" element={<Messages />} />
                             </Route>
 
                             {/* Admin Protected Routes */}
@@ -58,6 +58,7 @@ function App() {
                             {/* Faculty Protected Routes */}
                             <Route element={<ProtectedRoute allowedRoles={['faculty']} />}>
                                 <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
+                                <Route path="/faculty/messages" element={<Messages />} />
                             </Route>
 
                             {/* Fallback */}

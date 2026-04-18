@@ -11,9 +11,11 @@ export const AuthProvider = ({ children }) => {
         // Check if token exists on load
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
+        const status = localStorage.getItem('status');
+        const id = localStorage.getItem('user_id');
 
         if (token && role) {
-            setUser({ token, role });
+            setUser({ id, token, role, status });
         }
         setLoading(false);
     }, []);
@@ -27,13 +29,15 @@ export const AuthProvider = ({ children }) => {
             const res = await api.post('/auth/login', formData);
             const { access_token } = res.data;
 
-            // Decode JWT payload to get role (simplified here for brevity, usually use jwt-decode)
+            // Decode JWT payload
             const payload = JSON.parse(atob(access_token.split('.')[1]));
 
             localStorage.setItem('token', access_token);
             localStorage.setItem('role', payload.role);
+            localStorage.setItem('status', payload.status);
+            localStorage.setItem('user_id', payload.sub);
 
-            setUser({ token: access_token, role: payload.role });
+            setUser({ id: payload.sub, token: access_token, role: payload.role, status: payload.status });
             return true;
         } catch (error) {
             console.error("Login failed", error);
@@ -50,8 +54,10 @@ export const AuthProvider = ({ children }) => {
 
             localStorage.setItem('token', access_token);
             localStorage.setItem('role', payload.role);
+            localStorage.setItem('status', payload.status);
+            localStorage.setItem('user_id', payload.sub);
 
-            setUser({ token: access_token, role: payload.role });
+            setUser({ id: payload.sub, token: access_token, role: payload.role, status: payload.status });
             return { success: true };
         } catch (error) {
             console.error("Registration failed", error);
@@ -63,6 +69,8 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        localStorage.removeItem('status');
+        localStorage.removeItem('user_id');
         setUser(null);
     };
 

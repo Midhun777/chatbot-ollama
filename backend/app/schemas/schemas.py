@@ -9,6 +9,7 @@ class UserCreate(UserBase):
     password: str
     first_name: str
     last_name: str
+    role: Optional[str] = "student"
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -21,6 +22,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
+    status: Optional[str] = None
 
 class StudentProfileCreate(BaseModel):
     enrollment_no: str
@@ -47,37 +49,6 @@ class CourseResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class AttendanceCreate(BaseModel):
-    student_id: int
-    course_id: int
-    date: str  # using string date usually easier from frontend
-    status: str
-
-class AttendanceResponse(BaseModel):
-    id: int
-    date: datetime
-    status: str
-    course_id: int
-
-    class Config:
-        from_attributes = True
-
-class MarkCreate(BaseModel):
-    student_id: int
-    course_id: int
-    exam_type: str
-    marks_obtained: float
-    total_marks: float
-
-class MarkResponse(BaseModel):
-    id: int
-    exam_type: str
-    marks_obtained: float
-    total_marks: float
-    course: CourseResponse
-
-    class Config:
-        from_attributes = True
 
 class ChatMessageResponse(BaseModel):
     id: int
@@ -139,7 +110,6 @@ class StudentProfileUpdate(BaseModel):
     phone: Optional[str] = None
     department: Optional[str] = None
     current_semester: Optional[int] = None
-    cgpa: Optional[float] = None
     profile_bio: Optional[str] = None
 
 class StudentProfileResponse(BaseModel):
@@ -150,7 +120,6 @@ class StudentProfileResponse(BaseModel):
     department: str
     current_semester: int
     phone: Optional[str] = ""
-    cgpa: Optional[float] = 0.0
     profile_bio: Optional[str] = ""
 
     class Config:
@@ -174,3 +143,47 @@ class TimetableCreate(BaseModel):
     subject_code: str
     room: str
     faculty_name: str
+
+
+# ─── Direct Messaging ───────────────────────────────────────────
+class MessageCreate(BaseModel):
+    receiver_id: int
+    content: str
+
+class MessageResponse(BaseModel):
+    id: int
+    sender_id: int
+    receiver_id: int
+    content: str
+    timestamp: datetime
+    is_read: bool
+
+    class Config:
+        from_attributes = True
+
+class ChatMember(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    role: str
+    last_message: Optional[str] = None
+    last_message_time: Optional[datetime] = None
+    unread_count: int = 0
+
+# ─── Admin Management ───────────────────────────────────────────
+class UserStatusUpdate(BaseModel):
+    status: str
+
+class UserRoleUpdate(BaseModel):
+    role: str
+
+class UserManagementResponse(BaseModel):
+    id: int
+    email: str
+    role: str
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -53,9 +53,43 @@ def get_all_users(
             "id": u.id,
             "email": u.email,
             "role": u.role,
+            "status": u.status,
             "created_at": u.created_at,
         })
     return result
+
+@router.patch("/users/{user_id}/approve")
+def approve_faculty(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_active_admin)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role != "faculty":
+        raise HTTPException(status_code=400, detail="User is not a faculty member")
+    user.status = "active"
+    db.commit()
+    return {"message": "Faculty approved and activated"}
+
+@router.patch("/users/{user_id}/status")
+def update_user_status(
+    user_id: int,
+    update: schemas.UserStatusUpdate,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_active_admin)
+):
+    if user_id == admin_user.id:
+        raise HTTPException(status_code=400, detail="Cannot change your own status")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if update.status not in ["active", "pending", "banned"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    user.status = update.status
+    db.commit()
+    return {"message": f"Status updated to {update.status}"}
 
 @router.delete("/users/{user_id}")
 def delete_user(
@@ -75,18 +109,20 @@ def delete_user(
 @router.patch("/users/{user_id}/role")
 def change_user_role(
     user_id: int,
-    role: str,
+    update: schemas.UserRoleUpdate,
     db: Session = Depends(get_db),
     admin_user: models.User = Depends(get_current_active_admin)
 ):
-    if role not in ["student", "faculty", "admin"]:
+    if user_id == admin_user.id:
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+    if update.role not in ["student", "faculty", "admin"]:
         raise HTTPException(status_code=400, detail="Invalid role")
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user.role = role
+    user.role = update.role
     db.commit()
-    return {"message": f"Role updated to {role}"}
+    return {"message": f"Role updated to {update.role}"}
 
 # ─── STUDENTS ────────────────────────────────────────────────────────────────
 
