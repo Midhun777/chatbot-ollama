@@ -43,18 +43,25 @@ def ingest_pdf(file_path: str):
     
     return len(chunks)
 
-def ingest_all_knowledge():
-    """Batch processes all PDFs in the data/knowledge folder."""
-    if not os.path.exists(KNOWLEDGE_DIR):
-        print(f"Knowledge directory {KNOWLEDGE_DIR} missing.")
-        return 0
-
+def ingest_all_knowledge(db=None):
+    """Batch processes all PDFs in the data/knowledge folder and syncs DB records."""
     total_chunks = 0
-    for file in os.listdir(KNOWLEDGE_DIR):
-        if file.endswith(".pdf"):
-            path = os.path.join(KNOWLEDGE_DIR, file)
-            chunks = ingest_pdf(path)
-            total_chunks += chunks
+    
+    # 1. Process PDFs
+    if os.path.exists(KNOWLEDGE_DIR):
+        for file in os.listdir(KNOWLEDGE_DIR):
+            if file.endswith(".pdf"):
+                path = os.path.join(KNOWLEDGE_DIR, file)
+                chunks = ingest_pdf(path)
+                total_chunks += chunks
+    else:
+        print(f"Knowledge directory {KNOWLEDGE_DIR} missing.")
+
+    # 2. Sync Database Records (if DB session provided)
+    if db:
+        from app.ai_engine.db_ingest import ingest_database_records
+        db_chunks = ingest_database_records(db, embedding_model)
+        total_chunks += db_chunks
             
     return total_chunks
 

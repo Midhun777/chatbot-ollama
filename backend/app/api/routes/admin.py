@@ -367,9 +367,9 @@ def trigger_rag_ingestion(
 ):
     from app.ai_engine.ingest import ingest_all_knowledge
     try:
-        chunks = ingest_all_knowledge()
-        log_system_activity(db, admin_user.id, "System Initialization", f"RAG Ingestion: {chunks} chunks")
-        return {"message": "Ingestion complete", "chunks_processed": chunks}
+        chunks = ingest_all_knowledge(db=db)
+        log_system_activity(db, admin_user.id, "System Initialization", f"RAG Ingestion: {chunks} total knowledge blocks synchronized")
+        return {"message": "Ingestion complete and database synced", "total_blocks": chunks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
