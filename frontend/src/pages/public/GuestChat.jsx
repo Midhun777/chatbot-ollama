@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Bot, User, Sparkles, LogIn, ArrowRight, ShieldCheck, Database } from 'lucide-react';
+import { MessageSquare, Send, Bot, User, Sparkles, LogIn, ArrowRight, ShieldCheck, Database, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 

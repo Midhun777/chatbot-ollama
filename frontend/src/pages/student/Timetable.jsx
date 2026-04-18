@@ -16,7 +16,7 @@ const DAY_COLORS = {
 };
 
 const Timetable = () => {
-  const { user, login } = useContext(AuthContext);
+  const { user, login, refreshUser } = useContext(AuthContext);
   const [schedule, setSchedule] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,6 +72,7 @@ const Timetable = () => {
             department: browsing.dept, 
             current_semester: parseInt(browsing.sem) 
         });
+        await refreshUser(); // Trigger global update
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
     } catch (e) {
@@ -95,7 +96,27 @@ const Timetable = () => {
   const activeDaySchedule = byDay[activeDay] || [];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
+      {/* SUCCESS TOAST */}
+      <AnimatePresence>
+          {saveSuccess && (
+              <motion.div 
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl border border-white/10 backdrop-blur-md"
+              >
+                  <div className="bg-emerald-500 p-1.5 rounded-full">
+                      <CheckCircle className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                      <span className="text-sm font-black">Profile Updated!</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Academic path synchronized</span>
+                  </div>
+              </motion.div>
+          )}
+      </AnimatePresence>
+
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
@@ -150,15 +171,23 @@ const Timetable = () => {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
 
+              <AnimatePresence mode="wait">
               {browsing.dept && !isCurrentSelectionSaved() && (
-                  <button 
+                  <motion.button 
+                    key="save-btn"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={saveToProfile}
                     disabled={isSaving}
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
                   >
-                      {isSaving ? 'Saving...' : saveSuccess ? <><CheckCircle className="h-4 w-4"/> Saved</> : <><Save className="h-4 w-4"/> Save to Profile</>}
-                  </button>
+                      {isSaving ? 'Syncing...' : saveSuccess ? <><CheckCircle className="h-4 w-4"/> Saved</> : <><Save className="h-4 w-4"/> Save to Profile</>}
+                  </motion.button>
               )}
+              </AnimatePresence>
           </div>
         </div>
 

@@ -8,8 +8,14 @@ from app.core.logging import log_system_activity
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from app.core import security
+from app.api.dependencies import get_current_user
 
 router = APIRouter()
+
+@router.get("/me", response_model=schemas.UserMeResponse)
+def get_me(current_user: models.User = Depends(get_current_user)):
+    """Returns the currently authenticated user's profile info."""
+    return current_user
 
 @router.post("/register", response_model=schemas.Token)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):

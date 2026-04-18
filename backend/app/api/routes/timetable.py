@@ -61,11 +61,43 @@ def create_timetable_entry(
     admin_user: models.User = Depends(get_current_admin_or_faculty)
 ):
     """Admin or Faculty: Create a new timetable entry."""
+    # Permission Check: Faculty can only add to their own dept
+    if admin_user.role == "faculty":
+        if not admin_user.faculty_profile or entry.department != admin_user.faculty_profile.department:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only manage your own department's timetable.")
+
     db_entry = models.Timetable(**entry.dict())
     db.add(db_entry)
     db.commit()
     db.refresh(db_entry)
     log_system_activity(db, admin_user.id, "Added Timetable Entry", f"{db_entry.subject_name} ({db_entry.day_of_week})")
+    return db_entry
+
+@router.put("/{entry_id}", response_model=schemas.TimetableEntry)
+def update_timetable_entry(
+    entry_id: int,
+    entry: schemas.TimetableUpdate,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(get_current_admin_or_faculty)
+):
+    """Admin or Faculty: Update an existing timetable entry."""
+    db_entry = db.query(models.Timetable).filter(models.Timetable.id == entry_id).first()
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    
+    # Permission Check: Faculty can only update their own dept
+    if admin_user.role == "faculty":
+        if not admin_user.faculty_profile or db_entry.department != admin_user.faculty_profile.department:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only manage your own department's timetable.")
+
+    # Update fields provided in the request
+    update_data = entry.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_entry, key, value)
+    
+    db.commit()
+    db.refresh(db_entry)
+    log_system_activity(db, admin_user.id, "Updated Timetable Entry", f"{db_entry.subject_name} ({db_entry.day_of_week})")
     return db_entry
 
 @router.delete("/{entry_id}")
@@ -78,6 +110,12 @@ def delete_timetable_entry(
     db_entry = db.query(models.Timetable).filter(models.Timetable.id == entry_id).first()
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found")
+        
+    # Permission Check: Faculty can only delete from their own dept
+    if admin_user.role == "faculty":
+        if not admin_user.faculty_profile or db_entry.department != admin_user.faculty_profile.department:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only manage your own department's timetable.")
+
     subject = db_entry.subject_name
     db.delete(db_entry)
     db.commit()

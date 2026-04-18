@@ -7,17 +7,29 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Check if token exists on load
+    const refreshUser = async () => {
         const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
-        const status = localStorage.getItem('status');
-        const id = localStorage.getItem('user_id');
-
-        if (token && role) {
-            setUser({ id, token, role, status });
+        if (!token) {
+            setUser(null);
+            setLoading(false);
+            return;
         }
-        setLoading(false);
+        try {
+            const res = await api.get('/auth/me');
+            setUser({ ...res.data, token });
+        } catch (error) {
+            console.error("Failed to refresh user profile", error);
+            // If token is invalid/expired
+            if (error.response?.status === 401) {
+                logout();
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        refreshUser();
     }, []);
 
     const login = async (email, password) => {
@@ -29,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             const res = await api.post('/auth/login', formData);
             const { access_token } = res.data;
 
-            // Decode JWT payload
+            // Decode JWT payload to get basic info
             const payload = JSON.parse(atob(access_token.split('.')[1]));
 
             localStorage.setItem('token', access_token);
@@ -37,7 +49,8 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('status', payload.status);
             localStorage.setItem('user_id', payload.sub);
 
-            setUser({ id: payload.sub, token: access_token, role: payload.role, status: payload.status });
+            // Fetch full profile info for global state
+            await refreshUser();
             return true;
         } catch (error) {
             console.error("Login failed", error);
@@ -57,7 +70,8 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('status', payload.status);
             localStorage.setItem('user_id', payload.sub);
 
-            setUser({ id: payload.sub, token: access_token, role: payload.role, status: payload.status });
+            // Fetch full profile info
+            await refreshUser();
             return { success: true };
         } catch (error) {
             console.error("Registration failed", error);
@@ -75,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

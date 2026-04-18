@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, BookOpen, GraduationCap, Clock, Filter, Sparkles, AlertCircle } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, Clock, Filter, Sparkles, AlertCircle, X } from 'lucide-react';
 import api from '../../services/api';
 
 const Courses = () => {

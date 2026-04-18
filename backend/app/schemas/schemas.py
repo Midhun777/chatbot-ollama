@@ -177,6 +177,16 @@ class TimetableCreate(BaseModel):
     room: str
     faculty_name: str
 
+class TimetableUpdate(BaseModel):
+    department: Optional[str] = None
+    semester: Optional[int] = None
+    day_of_week: Optional[str] = None
+    time_slot: Optional[str] = None
+    subject_name: Optional[str] = None
+    subject_code: Optional[str] = None
+    room: Optional[str] = None
+    faculty_name: Optional[str] = None
+
 
 # ─── Direct Messaging ───────────────────────────────────────────
 class MessageCreate(BaseModel):
@@ -228,6 +238,17 @@ class AdminAuditLogResponse(BaseModel):
     action: str
     target: str
     timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class UserMeResponse(BaseModel):
+    id: int
+    email: EmailStr
+    role: str
+    status: str
+    student_profile: Optional[StudentProfileResponse] = None
+    faculty_profile: Optional[FacultyProfileResponse] = None
 
     class Config:
         from_attributes = True

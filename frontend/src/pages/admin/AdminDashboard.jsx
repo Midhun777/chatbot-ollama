@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, FileText, Activity, BarChart3, Bell,
   Trash2, ShieldCheck, GraduationCap, BookOpen, Calendar,
-  Upload, MessageSquare, Plus, X, ChevronDown, AlertCircle,
+  Upload, Plus, X, ChevronDown, AlertCircle,
   TrendingUp, UserCog, Clock, Search, RefreshCw
 } from 'lucide-react';
 import api from '../../services/api';
@@ -94,7 +94,6 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [faculty, setFaculty] = useState([]);
   const [forms, setForms] = useState([]);
-  const [chatLogs, setChatLogs] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [timetable, setTimetable] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,9 +125,6 @@ const AdminDashboard = () => {
     finally { setIsLoading(false); }
   };
 
-  const fetchChatLogs = async () => {
-    try { const r = await api.get('/admin/chat-logs'); setChatLogs(r.data); } catch (e) { console.error(e); }
-  };
   const fetchAuditLogs = async () => {
     try { const r = await api.get('/admin/audit-logs'); setAuditLogs(r.data); } catch (e) { console.error(e); }
   };
@@ -137,7 +133,6 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'chatlogs') fetchChatLogs();
     if (activeTab === 'auditlogs') fetchAuditLogs();
     if (activeTab === 'timetable') fetchTimetable();
   }, [activeTab]);
@@ -233,7 +228,6 @@ const AdminDashboard = () => {
           
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-4 mb-3 mt-6">AI & Logs</p>
           <NavItem icon={<Activity className="h-4 w-4"/>} label="Audit Logs" tab="auditlogs" active={activeTab==='auditlogs'} onClick={setActiveTab} />
-          <NavItem icon={<MessageSquare className="h-4 w-4"/>} label="Chat Logs" tab="chatlogs" active={activeTab==='chatlogs'} onClick={setActiveTab} badge={stats?.total_chat_queries} />
         </nav>
       </aside>
 
@@ -241,14 +235,14 @@ const AdminDashboard = () => {
       <main className="flex-1 min-w-0 overflow-auto bg-slate-50">
         <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center gap-4 sticky top-0 z-30 shadow-sm">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-brand-900 capitalize tracking-tight">{activeTab === 'chatlogs' ? 'Chat History' : activeTab === 'auditlogs' ? 'System Audit Logs' : activeTab}</h2>
+            <h2 className="text-xl font-bold text-brand-900 capitalize tracking-tight">{activeTab === 'auditlogs' ? 'System Audit Logs' : activeTab}</h2>
             <p className="text-sm text-slate-500 font-medium">EduSphere Admin Operations</p>
           </div>
           {/* Mobile tab selector */}
           <div className="lg:hidden">
             <select className="text-sm border-slate-300 rounded-lg shadow-sm px-3 py-2 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
               value={activeTab} onChange={e => setActiveTab(e.target.value)}>
-              {['overview','users','students','faculty','announcements','forms','timetable','auditlogs','chatlogs'].map(t => (
+              {['overview','users','students','faculty','announcements','forms','timetable','auditlogs'].map(t => (
                 <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>
               ))}
             </select>
@@ -266,7 +260,6 @@ const AdminDashboard = () => {
                 <StatCard icon={<UserCog className="h-5 w-5 text-purple-600"/>} label="Faculty" value={stats?.total_faculty} color="bg-purple-50 border-purple-100" delay={0.15}/>
                 <StatCard icon={<Bell className="h-5 w-5 text-amber-600"/>} label="Announcements" value={stats?.total_announcements} color="bg-amber-50 border-amber-100" delay={0.2}/>
                 <StatCard icon={<FileText className="h-5 w-5 text-blue-600"/>} label="Forms & Docs" value={stats?.total_forms} color="bg-blue-50 border-blue-100" delay={0.25}/>
-                <StatCard icon={<MessageSquare className="h-5 w-5 text-rose-600"/>} label="AI Queries" value={stats?.total_chat_queries} color="bg-rose-50 border-rose-100" delay={0.3}/>
               </div>
 
               {/* Quick sections */}
@@ -709,45 +702,6 @@ const AdminDashboard = () => {
             </motion.div>
           )}
 
-          {/* ── CHAT LOGS ─────────────────────────────────────────────────── */}
-          {activeTab === 'chatlogs' && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                <h3 className="font-bold text-brand-900 text-lg">AI Chat Audit Logs ({chatLogs.length})</h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-                  <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search queries…" className="pl-9 pr-4 py-2 text-sm border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary w-64 shadow-sm"/>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {filtered(chatLogs, ['query','user_email','answer']).map(m=>(
-                  <div key={m.id} className="formal-card p-5">
-                    <div className="flex items-center justify-between gap-4 mb-3 pb-3 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 text-xs font-bold flex-shrink-0">
-                          {m.user_email?.[0]?.toUpperCase()}
-                        </div>
-                        <span className="text-xs font-semibold text-slate-600">{m.user_email}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">{m.source}</span>
-                        <span className="text-xs font-medium text-slate-400">{fmtTime(m.timestamp)}</span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-brand-900 mb-2 leading-relaxed"><span className="text-slate-400 mr-1">Q:</span>{m.query}</p>
-                    <p className="text-sm text-slate-600 leading-relaxed font-medium"><span className="text-slate-400 mr-1">A:</span>{m.answer}</p>
-                  </div>
-                ))}
-              </div>
-              {chatLogs.length === 0 && (
-                <div className="formal-card text-center py-16 text-slate-400 font-medium text-sm">
-                  <MessageSquare className="h-10 w-10 mx-auto text-slate-300 mb-3"/>
-                  <p>No chat history available.</p>
-                </div>
-              )}
-            </motion.div>
-          )}
 
           {/* ── AUDIT LOGS ─────────────────────────────────────────────────── */}
           {activeTab === 'auditlogs' && (

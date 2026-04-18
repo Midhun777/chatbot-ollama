@@ -43,7 +43,8 @@ const FacultyDashboard = () => {
     // Timetable
     const [timetable, setTimetable] = useState([]);
     const [showTTForm, setShowTTForm] = useState(false);
-    const [ttForm, setTtForm] = useState({ 
+    const [editingId, setEditingId] = useState(null);
+    const inicialTT = { 
         department: user?.faculty_profile?.department || '', 
         semester: 1, 
         day_of_week: 'Monday', 
@@ -52,7 +53,8 @@ const FacultyDashboard = () => {
         subject_code: '', 
         room: '', 
         faculty_name: user?.faculty_profile ? `${user.faculty_profile.first_name} ${user.faculty_profile.last_name}` : '' 
-    });
+    };
+    const [ttForm, setTtForm] = useState(inicialTT);
 
     // Forms / Materials
     const [materials, setMaterials] = useState([]);
@@ -121,15 +123,36 @@ const FacultyDashboard = () => {
         return grouped;
     };
 
-    const addTTEntry = async (e) => {
+    const saveTTEntry = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/timetable/', ttForm);
+            if (editingId) {
+                await api.put(`/timetable/${editingId}`, ttForm);
+            } else {
+                await api.post('/timetable/', ttForm);
+            }
             setShowTTForm(false);
+            setEditingId(null);
+            setTtForm(inicialTT);
             fetchTimetable();
         } catch (err) {
-            alert("Failed to add timetable entry.");
+            alert(`Failed to ${editingId ? 'update' : 'add'} timetable entry.`);
         }
+    };
+
+    const handleEditTTEntry = (entry) => {
+        setTtForm({
+            department: entry.department,
+            semester: entry.semester,
+            day_of_week: entry.day_of_week,
+            time_slot: entry.time_slot,
+            subject_name: entry.subject_name,
+            subject_code: entry.subject_code,
+            room: entry.room,
+            faculty_name: entry.faculty_name
+        });
+        setEditingId(entry.id);
+        setShowTTForm(true);
     };
 
     const deleteTTEntry = async (id) => {
@@ -303,7 +326,7 @@ const FacultyDashboard = () => {
                             <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
                                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                                     <h3 className="font-bold text-brand-900 text-lg">Manage Timetable</h3>
-                                    <button onClick={()=>setShowTTForm(true)} className="btn-primary text-sm px-4 py-2">
+                                    <button onClick={()=>{setEditingId(null); setTtForm(inicialTT); setShowTTForm(true);}} className="btn-primary text-sm px-4 py-2">
                                         <Plus className="h-4 w-4 mr-1.5 inline-block"/> Add Entry
                                     </button>
                                 </div>
@@ -322,17 +345,22 @@ const FacultyDashboard = () => {
                                                 <p className="font-semibold text-brand-900 text-sm mb-0.5">{e.subject_name}</p>
                                                 <p className="text-xs font-medium text-slate-500">{e.subject_code} &bull; {e.faculty_name} &bull; Room {e.room}</p>
                                             </div>
-                                            <button onClick={()=>deleteTTEntry(e.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors flex-shrink-0">
-                                                <Trash2 className="h-4 w-4"/>
-                                            </button>
+                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                <button onClick={()=>handleEditTTEntry(e)} className="p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-colors">
+                                                    <Edit className="h-4 w-4"/>
+                                                </button>
+                                                <button onClick={()=>deleteTTEntry(e.id)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors">
+                                                    <Trash2 className="h-4 w-4"/>
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                     </div>
                                 </div>
                                 ))}
                                 {showTTForm && (
-                                <Modal title="Add Timetable Entry" onClose={()=>setShowTTForm(false)}>
-                                    <form onSubmit={addTTEntry} className="space-y-4">
+                                <Modal title={editingId ? "Edit Timetable Entry" : "Add Timetable Entry"} onClose={()=>setShowTTForm(false)}>
+                                    <form onSubmit={saveTTEntry} className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             {[
                                                 {label:'Department',key:'department',type:'text'},
