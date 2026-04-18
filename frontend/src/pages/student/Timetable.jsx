@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, User, ChevronDown, BookOpen, Search, Save, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, ChevronDown, BookOpen, Search, Save, CheckCircle, Layout, List } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -21,6 +21,7 @@ const Timetable = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeDay, setActiveDay] = useState('Monday');
+  const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'weekly'
   
   // Browsing state
   const [available, setAvailable] = useState([]);
@@ -97,7 +98,7 @@ const Timetable = () => {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg">
                 <Calendar className="h-7 w-7 text-white" />
@@ -110,7 +111,23 @@ const Timetable = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+              {/* View Toggle */}
+              <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                  <button 
+                    onClick={() => setViewMode('daily')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${viewMode === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                      <Layout className="h-3.5 w-3.5" /> Daily
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('weekly')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black transition-all ${viewMode === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                      <List className="h-3.5 w-3.5" /> Full Week
+                  </button>
+              </div>
+
               <div className="relative group">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                       <Search className="h-4 w-4 text-slate-400" />
@@ -186,75 +203,119 @@ const Timetable = () => {
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-amber-800 font-medium text-center">
               {error}
             </div>
-          ) : activeDaySchedule.length === 0 ? (
-            <motion.div
-              key={activeDay + '-empty'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center"
-            >
-              <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-xl font-black text-slate-400">No classes on {activeDay}</p>
-              <p className="text-slate-400 mt-2">Enjoy your free day!</p>
-            </motion.div>
+          ) : viewMode === 'daily' ? (
+            /* DAILY VIEW */
+            activeDaySchedule.length === 0 ? (
+              <motion.div
+                key={activeDay + '-empty'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center"
+              >
+                <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-xl font-black text-slate-400">No classes on {activeDay}</p>
+                <p className="text-slate-400 mt-2">Enjoy your free day!</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={activeDay}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4"
+              >
+                {activeDaySchedule.map((entry, i) => (
+                    <ScheduleCard key={entry.id} entry={entry} day={activeDay} index={i} />
+                ))}
+              </motion.div>
+            )
           ) : (
+            /* WEEKLY OVERVIEW */
             <motion.div
-              key={activeDay}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+                key="weekly-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-10"
             >
-              {activeDaySchedule.map((entry, i) => {
-                const colors = DAY_COLORS[activeDay];
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.07 }}
-                    className={`flex gap-6 items-stretch bg-white rounded-2xl border ${colors.border} shadow-sm hover:shadow-md transition-shadow overflow-hidden`}
-                  >
-                    {/* Time sidebar */}
-                    <div className={`${colors.bg} px-5 py-5 flex flex-col items-center justify-center min-w-[110px] border-r ${colors.border}`}>
-                      <Clock className="h-4 w-4 text-slate-400 mb-1" />
-                      <p className="text-xs font-black text-slate-700 text-center leading-tight">
-                        {entry.time_slot.split(' - ').join('\n–\n')}
-                      </p>
+                {DAYS.map(day => {
+                    const dayEntries = byDay[day] || [];
+                    if (dayEntries.length === 0) return null;
+                    const colors = DAY_COLORS[day];
+                    return (
+                        <div key={day} className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`h-8 w-1.5 rounded-full ${colors.dot}`} />
+                                <h3 className="text-lg font-black text-slate-900">{day}</h3>
+                                <span className={`text-[10px] uppercase tracking-widest font-black px-2 py-0.5 rounded-md ${colors.badge}`}>
+                                    {dayEntries.length} Classes
+                                </span>
+                            </div>
+                            <div className="grid gap-4">
+                                {dayEntries.map((entry, i) => (
+                                    <ScheduleCard key={entry.id} entry={entry} day={day} index={i} />
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+                {schedule.length === 0 && (
+                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center">
+                        <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                        <p className="text-xl font-black text-slate-400">No classes scheduled for the entire week</p>
                     </div>
-                    {/* Content */}
-                    <div className="flex-1 py-5 pr-6 flex flex-col justify-center">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-black text-slate-900 text-lg leading-tight">{entry.subject_name}</h3>
-                          <span className={`inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${colors.badge}`}>
-                            {entry.subject_code}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-6 mt-3 flex-wrap">
-                        <div className="flex items-center gap-1.5 text-slate-500 text-sm">
-                          <User className="h-3.5 w-3.5" />
-                          <span className="font-semibold">{entry.faculty_name}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-500 text-sm">
-                          <MapPin className="h-3.5 w-3.5" />
-                          <span className="font-semibold">{entry.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Color strip */}
-                    <div className={`w-1.5 ${colors.dot.replace('bg-', 'bg-')}`} />
-                  </motion.div>
-                );
-              })}
+                )}
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
     </div>
   );
+};
+
+/* Extracted Card for Reusability */
+const ScheduleCard = ({ entry, day, index }) => {
+    const colors = DAY_COLORS[day];
+    return (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className={`flex gap-6 items-stretch bg-white rounded-2xl border ${colors.border} shadow-sm hover:shadow-md transition-shadow overflow-hidden group`}
+        >
+          {/* Time sidebar */}
+          <div className={`${colors.bg} px-5 py-5 flex flex-col items-center justify-center min-w-[110px] border-r ${colors.border} group-hover:bg-white transition-colors`}>
+            <Clock className="h-4 w-4 text-slate-400 mb-1" />
+            <p className="text-xs font-black text-slate-700 text-center leading-tight">
+              {entry.time_slot.split(' - ').join('\n–\n')}
+            </p>
+          </div>
+          {/* Content */}
+          <div className="flex-1 py-5 pr-6 flex flex-col justify-center">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-black text-slate-900 text-lg leading-tight group-hover:text-indigo-600 transition-colors">{entry.subject_name}</h3>
+                <span className={`inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${colors.badge}`}>
+                  {entry.subject_code}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-6 mt-3 flex-wrap">
+              <div className="flex items-center gap-1.5 text-slate-500 text-sm">
+                <User className="h-3.5 w-3.5" />
+                <span className="font-semibold">{entry.faculty_name}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-500 text-sm">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="font-semibold">{entry.room}</span>
+              </div>
+            </div>
+          </div>
+          {/* Color strip */}
+          <div className={`w-1.5 ${colors.dot}`} />
+        </motion.div>
+    );
 };
 
 export default Timetable;

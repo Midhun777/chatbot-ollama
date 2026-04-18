@@ -4,7 +4,7 @@ import sys
 # Add the parent directory to sys.path to allow imports from app and ai_engine
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ai_engine import rag_chain
+from app.ai_engine import rag_chain
 
 try:
     print("Attempting to ask a question via RAG...")

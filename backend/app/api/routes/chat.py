@@ -8,7 +8,7 @@ from app.database.connection import get_db
 from app.database import models
 from app.schemas import schemas
 from app.api.dependencies import get_current_user, get_current_user_optional
-from ai_engine import rag_chain, intent
+from app.ai_engine import rag_chain, intent
 
 router = APIRouter()
 
