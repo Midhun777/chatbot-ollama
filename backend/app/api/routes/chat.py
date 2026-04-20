@@ -198,6 +198,19 @@ def handle_chat_query(
                 ans = f"We have {total_count} faculty members. Here are some of them:\n\n{fac_list}"
                 chat_resp = ChatResponse(answer=ans, source="DATABASE")
 
+    # 2.9 Path: Admission Inquiry (Force policy retrieval)
+    if not chat_resp and query_intent == "ADMISSION_INQUIRY":
+        # We use standard RAG but the new tags and k=10 will naturally find the policy.
+        # We can also inject a hint to the LLM.
+        try:
+            # We call ask_question directly but with a more specific prompt if we wanted, 
+            # however, the k=10 and the new "OFFICIAL ADMISSION POLICY" tag in db_ingest 
+            # will make it very likely to be top of the list.
+            ans = rag_chain.ask_question(query)
+            chat_resp = ChatResponse(answer=ans, source="RAG-POLICY")
+        except Exception:
+            pass
+
     if not chat_resp:
         try:
             # Let Langchain process this through Chroma & local Ollama model

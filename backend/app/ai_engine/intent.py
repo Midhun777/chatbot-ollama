@@ -25,6 +25,11 @@ def classify_intent(question: str) -> str:
     if any(kw in question_lower for kw in faculty_keywords):
         return "FACULTY_INQUIRY"
 
+    # 1.7. Admission Inquiries (How to join? Admission process? etc.)
+    admission_keywords = ["admission", "enrollment", "how to join", "apply for course", "application process", "admission procedure", "how to apply"]
+    if any(kw in question_lower for kw in admission_keywords):
+        return "ADMISSION_INQUIRY"
+
     # 2. Personal keywords
     personal_keywords = [
         "my marks", "my attendance", "my fee", "my grade", "my cgpa", 

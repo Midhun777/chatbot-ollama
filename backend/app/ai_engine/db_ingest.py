@@ -11,14 +11,31 @@ CHROMA_DB_DIR = os.path.join(BACKEND_LOGIC_DIR, "data", "chromadb")
 def get_institution_info():
     """Returns hardcoded institution info as a Document."""
     info = """
-    EduSphere Web Portal - Institutional Information
+    CORE INSTITUTIONAL METADATA:
+    EduSphere Web Portal - Official Identity
     Location: Ernakulam, Kochi, Kerala, India.
     Campus: Main Campus is located at Marine Drive, Kochi.
     Contact: info@edusphere.edu | +91 484 2345678
-    Departments: Computer Science, Civil Engineering, Mechanical Engineering, Electrical & Electronics.
+    Departments: Computer Science, Civil Engineering, Mechanical Engineering, Electrical & Electronics, Business Administration.
     Vision: To be a global leader in AI-driven education and institutional management.
     """
     return Document(page_content=info, metadata={"source": "Institutional-Meta"})
+
+def get_admission_info():
+    """Returns detailed admission policy as a Document."""
+    info = """
+    OFFICIAL ADMISSION POLICY 2025-26:
+    The admission process at EduSphere is structured into 5 clear steps:
+    1. ONLINE APPLICATION: Candidates must register and fill the application form on the official website.
+    2. ENTRANCE EXAM: Applicants for Engineering and Management must appear for the EduSphere Entrance Test (EET).
+    3. MERIT LIST & INTERVIEW: Based on EET scores, candidates are shortlisted for a personal interview.
+    4. DOCUMENT VERIFICATION: Shortlisted candidates must bring original certificates for verification at the Kochi campus.
+    5. FEE PAYMENT & ENROLLMENT: Final admission is confirmed upon payment of the first semester fee.
+    
+    Eligibility: Minimum 60% aggregate in 10+2 for UG, and 55% in graduation for PG.
+    Deadlines: Phase 1 applications close on June 15th, 2025.
+    """
+    return Document(page_content=info, metadata={"source": "Admission-Policy"})
 
 def ingest_database_records(db: Session, embedding_model):
     """
@@ -27,37 +44,38 @@ def ingest_database_records(db: Session, embedding_model):
     """
     documents = []
 
-    # 1. Hardcoded Institution Info
+    # 1. Hardcoded Core Policies & Info
     documents.append(get_institution_info())
+    documents.append(get_admission_info())
 
-    # 2. Ingest Courses
+    # 2. Ingest Courses with Context Tags
     courses = db.query(models.Course).all()
     for c in courses:
-        text = f"Course Catalog Info: The course {c.course_name} (Code: {c.course_code}) is offered by the {c.department} department and carries {c.credits} credits."
+        text = f"[COURSE CATALOG] The subject '{c.course_name}' (Code: {c.course_code}) is offered by the {c.department} department. It is an academic course with {c.credits} credits."
         documents.append(Document(page_content=text, metadata={"source": "DB-Courses", "id": c.id}))
 
-    # 3. Ingest Faculty
+    # 3. Ingest Faculty with Context Tags
     faculty = db.query(models.Faculty).all()
     for f in faculty:
-        text = f"Faculty Directory: {f.first_name} {f.last_name} is a {f.designation} in the {f.department} department."
+        text = f"[FACULTY DIRECTORY] Dr./Prof. {f.first_name} {f.last_name} is a {f.designation} serving in the {f.department} department."
         documents.append(Document(page_content=text, metadata={"source": "DB-Faculty", "id": f.id}))
 
-    # 4. Ingest Timetable
+    # 4. Ingest Timetable with Context Tags (The most noisy records)
     timetable = db.query(models.Timetable).all()
     for t in timetable:
-        text = f"Timetable Entry: In the {t.department} department (Semester {t.semester}), there is a class for {t.subject_name} ({t.subject_code}) on {t.day_of_week} at {t.time_slot}. The class is held in {t.room} and taught by {t.faculty_name}."
+        text = f"[SCHEDULING RECORD] For the {t.department} department (Semester {t.semester}), a class for {t.subject_name} is scheduled on {t.day_of_week} at {t.time_slot}. This is a time-table entry for {t.room}."
         documents.append(Document(page_content=text, metadata={"source": "DB-Timetable", "id": t.id}))
 
-    # 5. Ingest Announcements
+    # 5. Ingest Announcements with Context Tags
     announcements = db.query(models.Announcement).all()
     for a in announcements:
-        text = f"Official Announcement [{a.category}]: {a.title}. Content: {a.body}"
+        text = f"[OFFICIAL ANNOUNCEMENT - {a.category}] Title: {a.title}. Content: {a.body}"
         documents.append(Document(page_content=text, metadata={"source": "DB-Announcements", "id": a.id}))
 
     if not documents:
         return 0
 
-    print(f"Syncing {len(documents)} database records into ChromaDB...")
+    print(f"Syncing {len(documents)} context-tagged records into ChromaDB...")
     
     # Initialize or load vector store
     vectorstore = Chroma(
@@ -65,8 +83,7 @@ def ingest_database_records(db: Session, embedding_model):
         embedding_function=embedding_model
     )
     
-    # Add documents (This upserts based on metadata/content if needed, 
-    # but here we just add them. For a production system, we'd check for duplicates.)
+    # Add documents
     vectorstore.add_documents(documents)
     vectorstore.persist()
     
